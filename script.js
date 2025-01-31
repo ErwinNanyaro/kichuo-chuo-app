@@ -26,8 +26,8 @@ function getRoutes() {
                 resultsDiv.innerHTML = '<p>No routes found for the selected locations.</p>';
             } else {
                 data.forEach(route => {
-                    // Handle NaN values for CarPrice
-                    const carPrice = isNaN(route.CarPrice) ? 'N/A' : route.CarPrice;
+                    // Handle null values for CarPrice
+                    const carPrice = route.CarPrice === null ? 'N/A' : route.CarPrice;
                     resultsDiv.innerHTML += `
                         <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
                         <p>Bajaji: ${route.BajajiPrice} TZS</p>
