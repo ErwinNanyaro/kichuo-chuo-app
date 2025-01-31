@@ -6,7 +6,7 @@ fetch('http://127.0.0.1:5000/locations')
         const toSelect = document.getElementById('to');
         data.forEach(location => {
             const option = document.createElement('option');
-            option.value = location.LocationID;
+            option.value = location.LocationName;  // Use LocationName instead of LocationID
             option.text = location.LocationName;
             fromSelect.add(option);
             toSelect.add(option.cloneNode(true));
@@ -22,12 +22,24 @@ function getRoutes() {
         .then(data => {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
-            data.forEach(route => {
-                resultsDiv.innerHTML += `
-                    <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
-                    <p>Bajaji: ${route.BajajiPrice} TZS</p>
-                    <p>Car: ${route.CarPrice} TZS</p>
-                `;
-            });
+            if (data.length === 0) {
+                resultsDiv.innerHTML = '<p>No routes found for the selected locations.</p>';
+            } else {
+                data.forEach(route => {
+                    // Handle NaN values for CarPrice
+                    const carPrice = isNaN(route.CarPrice) ? 'N/A' : route.CarPrice;
+                    resultsDiv.innerHTML += `
+                        <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
+                        <p>Bajaji: ${route.BajajiPrice} TZS</p>
+                        <p>Car: ${carPrice} TZS</p>
+                        <hr>
+                    `;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching routes:', error);
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>An error occurred while fetching routes. Please try again.</p>';
         });
 }
