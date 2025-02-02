@@ -6,7 +6,7 @@ fetch('http://127.0.0.1:5000/locations')
         const toSelect = document.getElementById('to');
         data.forEach(location => {
             const option = document.createElement('option');
-            option.value = location.LocationName;  // Use LocationName instead of LocationID
+            option.value = location.LocationName;
             option.text = location.LocationName;
             fromSelect.add(option);
             toSelect.add(option.cloneNode(true));
