@@ -13,23 +13,31 @@ fetch('http://127.0.0.1:5000/locations')
         });
     });
 
+// Fetch locations from the backend
+fetch('http://127.0.0.1:5000/locations')
+    .then(response => response.json())
+    .then(data => {
+        const fromSelect = document.getElementById('from');
+        const toSelect = document.getElementById('to');
+        data.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.LocationName;
+            option.text = location.LocationName;
+            fromSelect.add(option);
+            toSelect.add(option.cloneNode(true));
+        });
+    });
+
 // Fetch routes and prices
 function getRoutes() {
     const from = document.getElementById('from').value;
     const to = document.getElementById('to').value;
     fetch(`http://127.0.0.1:5000/routes?from=${from}&to=${to}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
-            if (data.error) {
-                resultsDiv.innerHTML = `<p>Error: ${data.error}</p>`;
-            } else if (data.length === 0) {
+            if (data.length === 0) {
                 resultsDiv.innerHTML = '<p>No routes found for the selected locations.</p>';
             } else {
                 data.forEach(route => {
@@ -46,6 +54,6 @@ function getRoutes() {
         .catch(error => {
             console.error('Error fetching routes:', error);
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `<p>An error occurred while fetching routes: ${error.message}</p>`;
+            resultsDiv.innerHTML = '<p>An error occurred while fetching routes. Please try again.</p>';
         });
 }
