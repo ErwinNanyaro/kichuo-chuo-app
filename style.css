@@ -74,3 +74,11 @@ button:hover {
     height: 30px;
     margin-right: 10px;
 }
+
+#vehicle-selection, #rider-details {
+    margin-top: 20px;
+}
+
+#rider-details {
+    text-align: left;
+}
