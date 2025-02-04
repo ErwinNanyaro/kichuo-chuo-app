@@ -19,6 +19,23 @@
         </div>
         <button onclick="getRoutes()">Get Routes</button>
         <div id="results"></div>
+        <div id="vehicle-selection" style="display: none;">
+            <label for="vehicle-type">Choose Vehicle:</label>
+            <select id="vehicle-type">
+                <option value="Motorcycle">Motorcycle</option>
+                <option value="Bajaji">Bajaji</option>
+                <option value="Car">Car</option>
+            </select>
+            <button onclick="getRiders()">Find Riders</button>
+        </div>
+        <div id="rider-details" style="display: none;">
+            <h2>Rider Details</h2>
+            <p><strong>Name:</strong> <span id="rider-name"></span></p>
+            <p><strong>Phone:</strong> <span id="rider-phone"></span></p>
+            <p><strong>Vehicle Type:</strong> <span id="rider-vehicle-type"></span></p>
+            <p><strong>Vehicle Details:</strong> <span id="rider-vehicle-details"></span></p>
+            <button onclick="confirmRide()">Confirm Ride</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
