@@ -13,21 +13,6 @@ fetch('http://127.0.0.1:5000/locations')
         });
     });
 
-// Fetch locations from the backend
-fetch('http://127.0.0.1:5000/locations')
-    .then(response => response.json())
-    .then(data => {
-        const fromSelect = document.getElementById('from');
-        const toSelect = document.getElementById('to');
-        data.forEach(location => {
-            const option = document.createElement('option');
-            option.value = location.LocationName;
-            option.text = location.LocationName;
-            fromSelect.add(option);
-            toSelect.add(option.cloneNode(true));
-        });
-    });
-
 // Fetch routes and prices
 function getRoutes() {
     const from = document.getElementById('from').value;
@@ -43,9 +28,18 @@ function getRoutes() {
                 data.forEach(route => {
                     const carPrice = route.CarPrice === null ? 'N/A' : route.CarPrice;
                     resultsDiv.innerHTML += `
-                        <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
-                        <p>Bajaji: ${route.BajajiPrice} TZS</p>
-                        <p>Car: ${carPrice} TZS</p>
+                        <div class="route-option">
+                            <img src="motorbike.png" alt="Motorcycle">
+                            <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
+                        </div>
+                        <div class="route-option">
+                            <img src="tuktuk.png" alt="Bajaji">
+                            <p>Bajaji: ${route.BajajiPrice} TZS</p>
+                        </div>
+                        <div class="route-option">
+                            <img src="taxi.png" alt="Car">
+                            <p>Car: ${carPrice} TZS</p>
+                        </div>
                         <hr>
                     `;
                 });
