@@ -5,21 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kichuo Chuo</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
 </head>
 <body>
-    <h1>Welcome to Kichuo Chuo!</h1>
-    <div>
-        <label for="from">From:</label>
-        <select id="from"></select>
-    </div>
-    <div>
-        <label for="to">To:</label>
-        <select id="to"></select>
-    </div>
-    <button onclick="getRoutes()">Get Routes</button>
-    <div id="results">
-        <p>Select locations and click "Get Routes" to see prices.</p>
+    <div class="container">
+        <h1>Welcome to Kichuo Chuo!</h1>
+        <div class="form-group">
+            <label for="from">From:</label>
+            <select id="from"></select>
+        </div>
+        <div class="form-group">
+            <label for="to">To:</label>
+            <select id="to"></select>
+        </div>
+        <button onclick="getRoutes()">Get Routes</button>
+        <div id="results"></div>
     </div>
     <script src="script.js"></script>
 </body>
