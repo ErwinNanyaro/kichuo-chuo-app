@@ -43,6 +43,8 @@ function getRoutes() {
                         <hr>
                     `;
                 });
+                // Show vehicle selection
+                document.getElementById('vehicle-selection').style.display = 'block';
             }
         })
         .catch(error => {
@@ -50,4 +52,35 @@ function getRoutes() {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '<p>An error occurred while fetching routes. Please try again.</p>';
         });
+}
+
+// Fetch riders for the selected vehicle type
+function getRiders() {
+    const vehicleType = document.getElementById('vehicle-type').value;
+    fetch(`http://127.0.0.1:5000/riders?vehicle_type=${vehicleType}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const rider = data[0]; // Select the first rider for now
+                document.getElementById('rider-name').textContent = rider.Name;
+                document.getElementById('rider-phone').textContent = rider.Phone;
+                document.getElementById('rider-vehicle-type').textContent = rider.VehicleType;
+                document.getElementById('rider-vehicle-details').textContent = rider.VehicleDetails;
+                document.getElementById('rider-details').style.display = 'block';
+            } else {
+                alert('No riders available for the selected vehicle type.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching riders:', error);
+            alert('An error occurred while fetching riders. Please try again.');
+        });
+}
+
+// Confirm the ride
+function confirmRide() {
+    alert('Ride confirmed! The rider will contact you shortly.');
+    // Reset the form
+    document.getElementById('vehicle-selection').style.display = 'none';
+    document.getElementById('rider-details').style.display = 'none';
 }
