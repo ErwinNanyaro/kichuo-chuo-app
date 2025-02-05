@@ -69,7 +69,13 @@ function getRoutes() {
 // Fetch riders for the selected vehicle type and zone
 function getRiders() {
     const vehicleType = document.getElementById('vehicle-type').value;
-    const zone = document.getElementById('from-zone').value;
+    const zone = document.getElementById('from-zone').value; // Get the zone from the hidden input field
+
+    if (!zone) {
+        alert('Please select a "From" location first.');
+        return;
+    }
+
     fetch(`http://127.0.0.1:5000/riders?vehicle_type=${vehicleType}&zone=${zone}`)
         .then(response => {
             if (!response.ok) {
@@ -93,12 +99,4 @@ function getRiders() {
             console.error('Error fetching riders:', error);
             alert('An error occurred while fetching riders. Please try again.');
         });
-}
-
-// Confirm the ride
-function confirmRide() {
-    alert('Ride confirmed! The rider will contact you shortly.');
-    // Reset the form
-    document.getElementById('vehicle-selection').style.display = 'none';
-    document.getElementById('rider-details').style.display = 'none';
 }
