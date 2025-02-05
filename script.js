@@ -21,7 +21,9 @@ function updateZone() {
     const fromLocation = document.getElementById('from').value;
     const selectedLocation = locationsData.find(location => location.LocationName === fromLocation);
     if (selectedLocation) {
-        document.getElementById('from-zone').value = selectedLocation.Zone;
+        document.getElementById('from-zone').value = selectedLocation.Zone; // Update the hidden input field
+    } else {
+        document.getElementById('from-zone').value = ''; // Clear the zone if no location is selected
     }
 }
 
