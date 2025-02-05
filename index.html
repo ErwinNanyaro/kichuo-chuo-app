@@ -11,7 +11,8 @@
         <h1>Welcome to Kichuo Chuo!</h1>
         <div class="form-group">
             <label for="from">From:</label>
-            <select id="from"></select>
+            <select id="from" onchange="updateZone()"></select>
+            <input type="hidden" id="from-zone">
         </div>
         <div class="form-group">
             <label for="to">To:</label>
@@ -33,7 +34,7 @@
             <p><strong>Name:</strong> <span id="rider-name"></span></p>
             <p><strong>Phone:</strong> <span id="rider-phone"></span></p>
             <p><strong>Vehicle Type:</strong> <span id="rider-vehicle-type"></span></p>
-            <p><strong>Vehicle Details:</strong> <span id="rider-vehicle-details"></span></p>
+            <p><strong>Zone:</strong> <span id="rider-zone"></span></p>
             <button onclick="confirmRide()">Confirm Ride</button>
         </div>
     </div>
