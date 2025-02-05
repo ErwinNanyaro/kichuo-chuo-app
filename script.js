@@ -29,8 +29,19 @@ function updateZone() {
 function getRoutes() {
     const from = document.getElementById('from').value;
     const to = document.getElementById('to').value;
+
+    if (!from || !to) {
+        alert('Please select both "From" and "To" locations.');
+        return;
+    }
+
     fetch(`http://127.0.0.1:5000/routes?from=${from}&to=${to}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
@@ -65,7 +76,6 @@ function getRoutes() {
             resultsDiv.innerHTML = '<p>An error occurred while fetching routes. Please try again.</p>';
         });
 }
-
 // Fetch riders for the selected vehicle type and zone
 function getRiders() {
     const vehicleType = document.getElementById('vehicle-type').value;
