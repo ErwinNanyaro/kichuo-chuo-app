@@ -58,14 +58,19 @@ function getRoutes() {
 function getRiders() {
     const vehicleType = document.getElementById('vehicle-type').value;
     fetch(`http://127.0.0.1:5000/riders?vehicle_type=${vehicleType}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.length > 0) {
                 const rider = data[0]; // Select the first rider for now
                 document.getElementById('rider-name').textContent = rider.Name;
-                document.getElementById('rider-phone').textContent = rider.Phone;
+                document.getElementById('rider-phone').textContent = rider['Mobile Contact']; // Use bracket notation for spaces
                 document.getElementById('rider-vehicle-type').textContent = rider.VehicleType;
-                document.getElementById('rider-vehicle-details').textContent = rider.VehicleDetails;
+                document.getElementById('rider-vehicle-details').textContent = rider.VehicleDetails || 'N/A'; // Handle missing details
                 document.getElementById('rider-details').style.display = 'block';
             } else {
                 alert('No riders available for the selected vehicle type.');
