@@ -1,7 +1,10 @@
+let locationsData = []; // Store locations data globally
+
 // Fetch locations from the backend
 fetch('http://127.0.0.1:5000/locations')
     .then(response => response.json())
     .then(data => {
+        locationsData = data; // Store locations data
         const fromSelect = document.getElementById('from');
         const toSelect = document.getElementById('to');
         data.forEach(location => {
@@ -12,6 +15,15 @@ fetch('http://127.0.0.1:5000/locations')
             toSelect.add(option.cloneNode(true));
         });
     });
+
+// Update the FromLocation zone when a location is selected
+function updateZone() {
+    const fromLocation = document.getElementById('from').value;
+    const selectedLocation = locationsData.find(location => location.LocationName === fromLocation);
+    if (selectedLocation) {
+        document.getElementById('from-zone').value = selectedLocation.Zone;
+    }
+}
 
 // Fetch routes and prices
 function getRoutes() {
@@ -54,10 +66,11 @@ function getRoutes() {
         });
 }
 
-// Fetch riders for the selected vehicle type
+// Fetch riders for the selected vehicle type and zone
 function getRiders() {
     const vehicleType = document.getElementById('vehicle-type').value;
-    fetch(`http://127.0.0.1:5000/riders?vehicle_type=${vehicleType}`)
+    const zone = document.getElementById('from-zone').value;
+    fetch(`http://127.0.0.1:5000/riders?vehicle_type=${vehicleType}&zone=${zone}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -66,14 +79,14 @@ function getRiders() {
         })
         .then(data => {
             if (data.length > 0) {
-                const rider = data[0]; // Select the first rider for now
+                const rider = data[Math.floor(Math.random() * data.length)]; // Select a random rider
                 document.getElementById('rider-name').textContent = rider.Name;
-                document.getElementById('rider-phone').textContent = rider['Mobile Contact']; // Use bracket notation for spaces
+                document.getElementById('rider-phone').textContent = rider['Mobile Contact'];
                 document.getElementById('rider-vehicle-type').textContent = rider.VehicleType;
-                document.getElementById('rider-vehicle-details').textContent = rider.VehicleDetails || 'N/A'; // Handle missing details
+                document.getElementById('rider-zone').textContent = rider.RiderZone;
                 document.getElementById('rider-details').style.display = 'block';
             } else {
-                alert('No riders available for the selected vehicle type.');
+                alert('No riders available for the selected vehicle type and zone.');
             }
         })
         .catch(error => {
