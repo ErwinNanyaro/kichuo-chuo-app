@@ -141,3 +141,43 @@ function getRiders() {
             alert('An error occurred while fetching riders. Please try again.');
         });
 }
+function confirmRide() {
+    const riderName = document.getElementById('rider-name').textContent;
+    const riderPhone = document.getElementById('rider-phone').textContent;
+    const riderVehicleType = document.getElementById('rider-vehicle-type').textContent;
+    const riderZone = document.getElementById('rider-zone').textContent;
+
+    const rideDetails = {
+        riderName,
+        riderPhone,
+        riderVehicleType,
+        riderZone,
+        from: document.getElementById('from').value,
+        to: document.getElementById('to').value,
+        vehicleType: document.getElementById('vehicle-type').value,
+        timestamp: new Date().toISOString()
+    };
+
+    // Send ride details to the backend
+    fetch('http://127.0.0.1:5000/confirm-ride', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(rideDetails)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert('Ride confirmed! The rider has been notified.');
+        console.log('Ride Details:', data);
+    })
+    .catch(error => {
+        console.error('Error confirming ride:', error);
+        alert('An error occurred while confirming the ride. Please try again.');
+    });
+}
