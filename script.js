@@ -83,6 +83,9 @@ function getRiders() {
     const vehicleType = document.getElementById('vehicle-type').value;
     const zone = document.getElementById('from-zone').value; // Get the zone from the hidden input field
 
+    console.log('Selected Vehicle Type:', vehicleType); // Debugging
+    console.log('Selected Zone:', zone); // Debugging
+
     if (!zone) {
         alert('Please select a "From" location first.');
         return;
@@ -96,6 +99,7 @@ function getRiders() {
             return response.json();
         })
         .then(data => {
+            console.log('Riders Data:', data); // Debugging
             if (data.length > 0) {
                 const rider = data[Math.floor(Math.random() * data.length)]; // Select a random rider
                 document.getElementById('rider-name').textContent = rider.Name;
