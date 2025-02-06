@@ -12,9 +12,11 @@
         <div class="form-group">
             <label for="from">From:</label>
             <select id="from" onchange="updateZone()">
-    <option value="">Select a location</option>
-    <!-- Options will be populated dynamically -->
-</select>
+                <option value="">Select a location</option>
+                <!-- Options will be populated dynamically -->
+            </select>
+            <!-- Add the hidden input field for the zone -->
+            <input type="hidden" id="from-zone" value="">
         </div>
         <div class="form-group">
             <label for="to">To:</label>
