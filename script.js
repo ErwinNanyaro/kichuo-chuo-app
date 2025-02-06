@@ -54,29 +54,38 @@ function getRoutes() {
         .then(data => {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
+
             if (data.length === 0) {
                 resultsDiv.innerHTML = '<p>No routes found for the selected locations.</p>';
             } else {
                 data.forEach(route => {
-                    const carPrice = route.CarPrice === null ? 'N/A' : route.CarPrice;
-                    resultsDiv.innerHTML += `
-                        <div class="route-option">
-                            <img src="motorbike.png" alt="Motorcycle">
-                            <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
-                        </div>
-                        <div class="route-option">
-                            <img src="tuktuk.png" alt="Bajaji">
-                            <p>Bajaji: ${route.BajajiPrice} TZS</p>
-                        </div>
-                        <div class="route-option">
-                            <img src="taxi.png" alt="Car">
-                            <p>Car: ${carPrice} TZS</p>
-                        </div>
-                        <hr>
-                    `;
+                    // Only display options with valid prices
+                    if (route.MotorcyclePrice > 0 || route.BajajiPrice > 0 || route.CarPrice > 0) {
+                        const carPrice = route.CarPrice === 0 ? 'N/A' : route.CarPrice;
+                        resultsDiv.innerHTML += `
+                            <div class="route-option">
+                                <img src="motorbike.png" alt="Motorcycle">
+                                <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
+                            </div>
+                            <div class="route-option">
+                                <img src="tuktuk.png" alt="Bajaji">
+                                <p>Bajaji: ${route.BajajiPrice} TZS</p>
+                            </div>
+                            <div class="route-option">
+                                <img src="taxi.png" alt="Car">
+                                <p>Car: ${carPrice} TZS</p>
+                            </div>
+                            <hr>
+                        `;
+                    }
                 });
-                // Show vehicle selection
-                document.getElementById('vehicle-selection').style.display = 'block';
+
+                // Show vehicle selection if at least one valid route is found
+                if (resultsDiv.innerHTML !== '') {
+                    document.getElementById('vehicle-selection').style.display = 'block';
+                } else {
+                    resultsDiv.innerHTML = '<p>No valid routes found for the selected locations.</p>';
+                }
             }
         })
         .catch(error => {
