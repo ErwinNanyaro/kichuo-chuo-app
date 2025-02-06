@@ -20,13 +20,18 @@ fetch('http://127.0.0.1:5000/locations')
 function updateZone() {
     const fromLocation = document.getElementById('from').value;
     const selectedLocation = locationsData.find(location => location.LocationName === fromLocation);
-    if (selectedLocation) {
-        document.getElementById('from-zone').value = selectedLocation.Zone; // Update the hidden input field
+    const zoneInput = document.getElementById('from-zone'); // Get the hidden input field
+
+    console.log('Selected Location:', selectedLocation); // Debugging
+    console.log('Zone Input Element:', zoneInput); // Debugging
+
+    if (selectedLocation && zoneInput) {
+        zoneInput.value = selectedLocation.Zone; // Update the hidden input field
+        console.log('Updated Zone:', zoneInput.value); // Debugging
     } else {
-        document.getElementById('from-zone').value = ''; // Clear the zone if no location is selected
+        console.error('Error: Could not update zone. Check if the "from-zone" input field exists.');
     }
 }
-
 // Fetch routes and prices
 function getRoutes() {
     const from = document.getElementById('from').value;
