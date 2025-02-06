@@ -181,3 +181,10 @@ function confirmRide() {
         alert('An error occurred while confirming the ride. Please try again.');
     });
 }
+const socket = io('http://127.0.0.1:5000');
+socket.on('connect', () => {
+    console.log('Connected to WebSocket server');
+});
+socket.on('confirm_ride', (data) => {
+    alert(`New ride confirmed: ${JSON.stringify(data)}`);
+});
