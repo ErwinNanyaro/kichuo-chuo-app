@@ -26,7 +26,9 @@ function updateZone() {
     console.log('Zone Input Element:', zoneInput); // Debugging
 
     if (selectedLocation && zoneInput) {
-        zoneInput.value = selectedLocation.Zone; // Update the hidden input field
+        // Handle the extra space in the "Zone " property
+        const zone = selectedLocation['Zone '] || selectedLocation.Zone; // Use 'Zone ' or 'Zone'
+        zoneInput.value = zone; // Update the hidden input field
         console.log('Updated Zone:', zoneInput.value); // Debugging
     } else {
         console.error('Error: Could not update zone. Check if the "from-zone" input field exists.');
