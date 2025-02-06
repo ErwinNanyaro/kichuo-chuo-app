@@ -81,7 +81,16 @@ function getRoutes() {
 // Fetch riders for the selected vehicle type and zone
 function getRiders() {
     const vehicleType = document.getElementById('vehicle-type').value;
-    const zone = document.getElementById('from-zone').value; // Get the zone from the hidden input field
+    const zoneInput = document.getElementById('from-zone'); // Get the hidden input field
+
+    console.log('Zone Input Element:', zoneInput); // Debugging
+
+    if (!zoneInput) {
+        console.error('Error: The "from-zone" input field is missing or not found.');
+        return;
+    }
+
+    const zone = zoneInput.value; // Get the zone value
 
     console.log('Selected Vehicle Type:', vehicleType); // Debugging
     console.log('Selected Zone:', zone); // Debugging
