@@ -1,3 +1,5 @@
+let locationsData = []; // Store locations data globally
+
 // Connect to the Socket.IO server
 const socket = io('http://127.0.0.1:5000', {
     transports: ['websocket']  // Force WebSocket transport
@@ -15,6 +17,7 @@ socket.on('confirm_ride', (data) => {
 fetch('http://127.0.0.1:5000/locations')
     .then(response => response.json())
     .then(data => {
+        locationsData = data; // Store locations data globally
         const fromSelect = document.getElementById('from');
         const toSelect = document.getElementById('to');
         data.forEach(location => {
