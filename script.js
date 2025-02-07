@@ -1,10 +1,20 @@
-let locationsData = []; // Store locations data globally
+// Connect to the Socket.IO server
+const socket = io('http://127.0.0.1:5000', {
+    transports: ['websocket']  // Force WebSocket transport
+});
+
+socket.on('connect', () => {
+    console.log('Connected to WebSocket server');
+});
+
+socket.on('confirm_ride', (data) => {
+    alert(`New ride confirmed: ${JSON.stringify(data)}`);
+});
 
 // Fetch locations from the backend
 fetch('http://127.0.0.1:5000/locations')
     .then(response => response.json())
     .then(data => {
-        locationsData = data; // Store locations data
         const fromSelect = document.getElementById('from');
         const toSelect = document.getElementById('to');
         data.forEach(location => {
@@ -20,20 +30,11 @@ fetch('http://127.0.0.1:5000/locations')
 function updateZone() {
     const fromLocation = document.getElementById('from').value;
     const selectedLocation = locationsData.find(location => location.LocationName === fromLocation);
-    const zoneInput = document.getElementById('from-zone'); // Get the hidden input field
-
-    console.log('Selected Location:', selectedLocation); // Debugging
-    console.log('Zone Input Element:', zoneInput); // Debugging
-
-    if (selectedLocation && zoneInput) {
-        // Handle the extra space in the "Zone " property
-        const zone = selectedLocation['Zone '] || selectedLocation.Zone; // Use 'Zone ' or 'Zone'
-        zoneInput.value = zone; // Update the hidden input field
-        console.log('Updated Zone:', zoneInput.value); // Debugging
-    } else {
-        console.error('Error: Could not update zone. Check if the "from-zone" input field exists.');
+    if (selectedLocation) {
+        document.getElementById('from-zone').value = selectedLocation.Zone;
     }
 }
+
 // Fetch routes and prices
 function getRoutes() {
     const from = document.getElementById('from').value;
@@ -54,38 +55,29 @@ function getRoutes() {
         .then(data => {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
-
             if (data.length === 0) {
                 resultsDiv.innerHTML = '<p>No routes found for the selected locations.</p>';
             } else {
                 data.forEach(route => {
-                    // Only display options with valid prices
-                    if (route.MotorcyclePrice > 0 || route.BajajiPrice > 0 || route.CarPrice > 0) {
-                        const carPrice = route.CarPrice === 0 ? 'N/A' : route.CarPrice;
-                        resultsDiv.innerHTML += `
-                            <div class="route-option">
-                                <img src="motorbike.png" alt="Motorcycle">
-                                <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
-                            </div>
-                            <div class="route-option">
-                                <img src="tuktuk.png" alt="Bajaji">
-                                <p>Bajaji: ${route.BajajiPrice} TZS</p>
-                            </div>
-                            <div class="route-option">
-                                <img src="taxi.png" alt="Car">
-                                <p>Car: ${carPrice} TZS</p>
-                            </div>
-                            <hr>
-                        `;
-                    }
+                    const carPrice = route.CarPrice === null ? 'N/A' : route.CarPrice;
+                    resultsDiv.innerHTML += `
+                        <div class="route-option">
+                            <img src="motorbike.png" alt="Motorcycle">
+                            <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
+                        </div>
+                        <div class="route-option">
+                            <img src="tuktuk.png" alt="Bajaji">
+                            <p>Bajaji: ${route.BajajiPrice} TZS</p>
+                        </div>
+                        <div class="route-option">
+                            <img src="taxi.png" alt="Car">
+                            <p>Car: ${carPrice} TZS</p>
+                        </div>
+                        <hr>
+                    `;
                 });
-
-                // Show vehicle selection if at least one valid route is found
-                if (resultsDiv.innerHTML !== '') {
-                    document.getElementById('vehicle-selection').style.display = 'block';
-                } else {
-                    resultsDiv.innerHTML = '<p>No valid routes found for the selected locations.</p>';
-                }
+                // Show vehicle selection
+                document.getElementById('vehicle-selection').style.display = 'block';
             }
         })
         .catch(error => {
@@ -94,22 +86,11 @@ function getRoutes() {
             resultsDiv.innerHTML = '<p>An error occurred while fetching routes. Please try again.</p>';
         });
 }
+
 // Fetch riders for the selected vehicle type and zone
 function getRiders() {
     const vehicleType = document.getElementById('vehicle-type').value;
-    const zoneInput = document.getElementById('from-zone'); // Get the hidden input field
-
-    console.log('Zone Input Element:', zoneInput); // Debugging
-
-    if (!zoneInput) {
-        console.error('Error: The "from-zone" input field is missing or not found.');
-        return;
-    }
-
-    const zone = zoneInput.value; // Get the zone value
-
-    console.log('Selected Vehicle Type:', vehicleType); // Debugging
-    console.log('Selected Zone:', zone); // Debugging
+    const zone = document.getElementById('from-zone').value; // Get the zone from the hidden input field
 
     if (!zone) {
         alert('Please select a "From" location first.');
@@ -124,7 +105,6 @@ function getRiders() {
             return response.json();
         })
         .then(data => {
-            console.log('Riders Data:', data); // Debugging
             if (data.length > 0) {
                 const rider = data[Math.floor(Math.random() * data.length)]; // Select a random rider
                 document.getElementById('rider-name').textContent = rider.Name;
@@ -141,14 +121,14 @@ function getRiders() {
             alert('An error occurred while fetching riders. Please try again.');
         });
 }
+
+// Confirm ride
 function confirmRide() {
-    // Get rider details from the page
     const riderName = document.getElementById('rider-name').textContent;
     const riderPhone = document.getElementById('rider-phone').textContent;
     const riderVehicleType = document.getElementById('rider-vehicle-type').textContent;
     const riderZone = document.getElementById('rider-zone').textContent;
 
-    // Get ride details
     const rideDetails = {
         riderName,
         riderPhone,
@@ -157,7 +137,7 @@ function confirmRide() {
         from: document.getElementById('from').value,
         to: document.getElementById('to').value,
         vehicleType: document.getElementById('vehicle-type').value,
-        timestamp: new Date().toISOString() // Current date and time
+        timestamp: new Date().toISOString()
     };
 
     // Send ride details to the backend
@@ -183,10 +163,3 @@ function confirmRide() {
         alert('An error occurred while confirming the ride. Please try again.');
     });
 }
-const socket = io('http://127.0.0.1:5000');
-socket.on('connect', () => {
-    console.log('Connected to WebSocket server');
-});
-socket.on('confirm_ride', (data) => {
-    alert(`New ride confirmed: ${JSON.stringify(data)}`);
-});
