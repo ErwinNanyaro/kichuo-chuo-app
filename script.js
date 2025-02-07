@@ -142,11 +142,13 @@ function getRiders() {
         });
 }
 function confirmRide() {
+    // Get rider details from the page
     const riderName = document.getElementById('rider-name').textContent;
     const riderPhone = document.getElementById('rider-phone').textContent;
     const riderVehicleType = document.getElementById('rider-vehicle-type').textContent;
     const riderZone = document.getElementById('rider-zone').textContent;
 
+    // Get ride details
     const rideDetails = {
         riderName,
         riderPhone,
@@ -155,7 +157,7 @@ function confirmRide() {
         from: document.getElementById('from').value,
         to: document.getElementById('to').value,
         vehicleType: document.getElementById('vehicle-type').value,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString() // Current date and time
     };
 
     // Send ride details to the backend
@@ -181,10 +183,3 @@ function confirmRide() {
         alert('An error occurred while confirming the ride. Please try again.');
     });
 }
-const socket = io('http://127.0.0.1:5000');
-socket.on('connect', () => {
-    console.log('Connected to WebSocket server');
-});
-socket.on('confirm_ride', (data) => {
-    alert(`New ride confirmed: ${JSON.stringify(data)}`);
-});
