@@ -9,33 +9,21 @@
 <body>
     <div class="container">
         <h1>Welcome to Kichuo Chuo!</h1>
-
-        <!-- From Location -->
         <div class="form-group">
             <label for="from">From:</label>
             <select id="from" onchange="updateZone()">
                 <option value="">Select a location</option>
                 <!-- Options will be populated dynamically -->
             </select>
-            <input type="hidden" id="from-zone" value=""> <!-- Moved inside the form-group -->
+            <!-- Add the hidden input field for the zone -->
+            <input type="hidden" id="from-zone" value="">
         </div>
-
-        <!-- To Location -->
         <div class="form-group">
             <label for="to">To:</label>
-            <select id="to">
-                <option value="">Select a location</option>
-                <!-- Options will be populated dynamically -->
-            </select>
+            <select id="to"></select>
         </div>
-
-        <!-- Get Routes Button -->
         <button onclick="getRoutes()">Get Routes</button>
-
-        <!-- Results Section -->
         <div id="results"></div>
-
-        <!-- Vehicle Selection -->
         <div id="vehicle-selection" style="display: none;">
             <label for="vehicle-type">Choose Vehicle:</label>
             <select id="vehicle-type">
@@ -45,8 +33,6 @@
             </select>
             <button onclick="getRiders()">Find Riders</button>
         </div>
-
-        <!-- Rider Details -->
         <div id="rider-details" style="display: none;">
             <h2>Rider Details</h2>
             <p><strong>Name:</strong> <span id="rider-name"></span></p>
@@ -56,9 +42,6 @@
             <button onclick="confirmRide()">Confirm Ride</button>
         </div>
     </div>
-
-    <!-- Socket.IO and Custom Script -->
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
