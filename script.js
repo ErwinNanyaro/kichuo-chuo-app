@@ -1,7 +1,9 @@
 let locationsData = []; // Store locations data globally
 
 // Connect to the WebSocket server
-const socket = io('http://127.0.0.1:5000', {
+const socket = io(const socket = io('https://abc123.ngrok.io', {
+    transports: ['websocket']  // Force WebSocket transport
+});', {
     transports: ['websocket']  // Force WebSocket transport
 });
 
