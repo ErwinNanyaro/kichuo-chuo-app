@@ -2,7 +2,7 @@ let locationsData = []; // Store locations data globally
 let selectedVehicle = null; // Store the selected vehicle type
 
 // Connect to the WebSocket server
-const socket = io('http://127.0.0.1:5000', {
+const socket = io('wss://a5af-197-186-3-150.ngrok-free.app', {
     transports: ['websocket']  // Force WebSocket transport
 });
 
