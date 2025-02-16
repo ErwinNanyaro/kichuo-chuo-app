@@ -102,3 +102,28 @@ button:hover {
     text-align: left;
     margin-top: 20px;
 }
+/* Confirmed Rides Section */
+#confirmed-rides {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#confirmed-rides h2 {
+    color: #4CAF50;
+    margin-bottom: 15px;
+}
+
+.ride-details {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.ride-details p {
+    margin: 5px 0;
+}
