@@ -1,8 +1,9 @@
 let locationsData = []; // Store locations data globally
+let selectedVehicle = null; // Store the selected vehicle type
 
 // Connect to the WebSocket server
 const socket = io('https://71c7-197-186-5-3.ngrok-free.app', {
-    transports: ['websocket']
+    transports: ['websocket']  // Force WebSocket transport
 });
 
 // Handle WebSocket connection errors
@@ -13,11 +14,6 @@ socket.on('connect_error', (error) => {
 
 socket.on('connect', () => {
     console.log('Connected to WebSocket server');
-});
-
-// Listen for ride confirmation notifications
-socket.on('ride_confirmed', (data) => {
-    alert(`New ride confirmed: ${JSON.stringify(data)}`);
 });
 
 // Fetch locations from the backend
@@ -79,34 +75,16 @@ function getRoutes() {
             if (data.length === 0) {
                 resultsDiv.innerHTML = '<p>No routes found for the selected locations.</p>';
             } else {
-                data.forEach(route => {
-                    // Only display options with valid prices
-                    if (route.MotorcyclePrice > 0 || route.BajajiPrice > 0 || route.CarPrice > 0) {
-                        const carPrice = route.CarPrice === 0 ? 'N/A' : route.CarPrice;
-                        resultsDiv.innerHTML += `
-                            <div class="route-option">
-                                <img src="motorbike.png" alt="Motorcycle">
-                                <p>Motorcycle: ${route.MotorcyclePrice} TZS</p>
-                            </div>
-                            <div class="route-option">
-                                <img src="tuktuk.png" alt="Bajaji">
-                                <p>Bajaji: ${route.BajajiPrice} TZS</p>
-                            </div>
-                            <div class="route-option">
-                                <img src="taxi.png" alt="Car">
-                                <p>Car: ${carPrice} TZS</p>
-                            </div>
-                            <hr>
-                        `;
-                    }
+                const route = data[0]; // Assuming only one route is returned
+                const vehicleCards = document.querySelectorAll('.vehicle-card');
+                vehicleCards.forEach(card => {
+                    const vehicleType = card.getAttribute('data-vehicle');
+                    const priceSpan = card.querySelector('.price');
+                    priceSpan.textContent = route[`${vehicleType}Price`];
                 });
 
-                // Show vehicle selection if at least one valid route is found
-                if (resultsDiv.innerHTML !== '') {
-                    document.getElementById('vehicle-selection').style.display = 'block';
-                } else {
-                    resultsDiv.innerHTML = '<p>No valid routes found for the selected locations.</p>';
-                }
+                // Show vehicle selection
+                document.getElementById('vehicle-selection').style.display = 'block';
             }
         })
         .catch(error => {
@@ -116,29 +94,41 @@ function getRoutes() {
         });
 }
 
+// Add click event listeners to vehicle cards
+document.querySelectorAll('.vehicle-card').forEach(card => {
+    card.addEventListener('click', () => {
+        // Remove active class from all cards
+        document.querySelectorAll('.vehicle-card').forEach(c => {
+            c.classList.remove('active');
+        });
+
+        // Add active class to the clicked card
+        card.classList.add('active');
+
+        // Store the selected vehicle type
+        selectedVehicle = card.getAttribute('data-vehicle');
+
+        // Show the "Find Riders" button
+        document.getElementById('find-rider-btn').style.display = 'block';
+    });
+});
+
 // Fetch riders for the selected vehicle type and zone
 function getRiders() {
-    const vehicleType = document.getElementById('vehicle-type').value;
-    const zoneInput = document.getElementById('from-zone'); // Get the hidden input field
-
-    console.log('Zone Input Element:', zoneInput); // Debugging
-
-    if (!zoneInput) {
-        console.error('Error: The "from-zone" input field is missing or not found.');
+    if (!selectedVehicle) {
+        alert('Please select a vehicle first.');
         return;
     }
 
+    const zoneInput = document.getElementById('from-zone'); // Get the hidden input field
     const zone = zoneInput.value; // Get the zone value
-
-    console.log('Selected Vehicle Type:', vehicleType); // Debugging
-    console.log('Selected Zone:', zone); // Debugging
 
     if (!zone) {
         alert('Please select a "From" location first.');
         return;
     }
 
-    fetch(`http://127.0.0.1:5000/riders?vehicle_type=${vehicleType}&zone=${zone}`)
+    fetch(`http://127.0.0.1:5000/riders?vehicle_type=${selectedVehicle}&zone=${zone}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -178,7 +168,7 @@ function confirmRide() {
         riderZone,
         from: document.getElementById('from').value,
         to: document.getElementById('to').value,
-        vehicleType: document.getElementById('vehicle-type').value,
+        vehicleType: selectedVehicle,
         timestamp: new Date().toISOString()
     };
 
