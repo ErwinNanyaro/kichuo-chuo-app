@@ -3,7 +3,10 @@ let selectedVehicle = null; // Store the selected vehicle type
 
 // Connect to the WebSocket server
 const socket = io('wss://a5af-197-186-3-150.ngrok-free.app', {
-    transports: ['websocket']  // Force WebSocket transport
+    transports: ['websocket'],  // Force WebSocket transport
+    reconnection: true,         // Enable reconnection
+    reconnectionAttempts: 5,    // Number of reconnection attempts
+    reconnectionDelay: 1000     // Delay between reconnection attempts
 });
 
 // Handle WebSocket connection errors
@@ -22,7 +25,7 @@ socket.on('ride_confirmed', (data) => {
 });
 
 // Fetch locations from the backend
-fetch('http://127.0.0.1:5000/locations')
+fetch('https://a5af-197-186-3-150.ngrok-free.app/locations')
     .then(response => response.json())
     .then(data => {
         locationsData = data; // Store locations data
@@ -66,7 +69,7 @@ function getRoutes() {
         return;
     }
 
-    fetch(`http://127.0.0.1:5000/routes?from=${from}&to=${to}`)
+    fetch(`https://a5af-197-186-3-150.ngrok-free.app/routes?from=${from}&to=${to}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -133,7 +136,7 @@ function getRiders() {
         return;
     }
 
-    fetch(`http://127.0.0.1:5000/riders?vehicle_type=${selectedVehicle}&zone=${zone}`)
+    fetch(`https://a5af-197-186-3-150.ngrok-free.app/riders?vehicle_type=${selectedVehicle}&zone=${zone}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -178,7 +181,7 @@ function confirmRide() {
     };
 
     // Send ride details to the backend
-    fetch('http://127.0.0.1:5000/confirm-ride', {
+    fetch('https://a5af-197-186-3-150.ngrok-free.app/confirm-ride', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
