@@ -5,6 +5,12 @@ const socket = io('https://71c7-197-186-5-3.ngrok-free.app', {
     transports: ['websocket']  // Force WebSocket transport
 });
 
+// Handle WebSocket connection errors
+socket.on('connect_error', (error) => {
+    console.error('WebSocket connection error:', error);
+    alert('Failed to connect to the server. Please try again.');
+});
+
 socket.on('connect', () => {
     console.log('Connected to WebSocket server');
 });
