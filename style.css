@@ -63,22 +63,42 @@ button:hover {
     text-align: left;
 }
 
-.route-option {
+.vehicle-options {
     display: flex;
-    align-items: center;
-    margin-bottom: 10px;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
 }
 
-.route-option img {
+.vehicle-card {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.vehicle-card:hover {
+    background-color: #f0f0f0;
+}
+
+.vehicle-card img {
     width: 30px;
     height: 30px;
     margin-right: 10px;
 }
 
-#vehicle-selection, #rider-details {
+.vehicle-card p {
+    margin: 0;
+}
+
+#find-rider-btn {
     margin-top: 20px;
 }
 
 #rider-details {
     text-align: left;
+    margin-top: 20px;
 }
