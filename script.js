@@ -2,11 +2,8 @@ let locationsData = []; // Store locations data globally
 let selectedVehicle = null; // Store the selected vehicle type
 
 // Connect to the WebSocket server
-const socket = io('wss://a5af-197-186-3-150.ngrok-free.app', {
-    transports: ['websocket'],  // Force WebSocket transport
-    reconnection: true,         // Enable reconnection
-    reconnectionAttempts: 5,    // Number of reconnection attempts
-    reconnectionDelay: 1000     // Delay between reconnection attempts
+const socket = io('http://127.0.0.1:5000', {
+    transports: ['websocket']  // Force WebSocket transport
 });
 
 // Handle WebSocket connection errors
@@ -25,7 +22,7 @@ socket.on('ride_confirmed', (data) => {
 });
 
 // Fetch locations from the backend
-fetch('https://a5af-197-186-3-150.ngrok-free.app/locations')
+fetch('http://127.0.0.1:5000/locations')
     .then(response => response.json())
     .then(data => {
         locationsData = data; // Store locations data
@@ -69,7 +66,7 @@ function getRoutes() {
         return;
     }
 
-    fetch(`https://a5af-197-186-3-150.ngrok-free.app/routes?from=${from}&to=${to}`)
+    fetch(`http://127.0.0.1:5000/routes?from=${from}&to=${to}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -136,7 +133,7 @@ function getRiders() {
         return;
     }
 
-    fetch(`https://a5af-197-186-3-150.ngrok-free.app/riders?vehicle_type=${selectedVehicle}&zone=${zone}`)
+    fetch(`http://127.0.0.1:5000/riders?vehicle_type=${selectedVehicle}&zone=${zone}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -164,22 +161,12 @@ function getRiders() {
 
 // Confirm ride
 function confirmRide() {
-    const passengerName = prompt("Enter your name:"); // Get passenger name
-    const passengerPhone = prompt("Enter your phone number:"); // Get passenger phone
-
-    if (!passengerName || !passengerPhone) {
-        alert("Please provide your name and phone number.");
-        return;
-    }
-
     const riderName = document.getElementById('rider-name').textContent;
     const riderPhone = document.getElementById('rider-phone').textContent;
     const riderVehicleType = document.getElementById('rider-vehicle-type').textContent;
     const riderZone = document.getElementById('rider-zone').textContent;
 
     const rideDetails = {
-        passengerName,
-        passengerPhone,
         riderName,
         riderPhone,
         riderVehicleType,
@@ -191,7 +178,7 @@ function confirmRide() {
     };
 
     // Send ride details to the backend
-    fetch('https://a5af-197-186-3-150.ngrok-free.app/confirm-ride', {
+    fetch('http://127.0.0.1:5000/confirm-ride', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -205,10 +192,7 @@ function confirmRide() {
         return response.json();
     })
     .then(data => {
-        alert(`Ride confirmed!\n
-               Ride Price: ${data.ride_price_tzs} TZS\n
-               Commission: ${data.commission_tzs} TZS\n
-               Net Amount: ${data.net_amount_tzs} TZS`);
+        alert(`Ride confirmed! The rider has been notified.\nCommission: ${data.commission} TZS\nTotal Price: ${data.total_price} TZS`);
         console.log('Ride Details:', data);
     })
     .catch(error => {
@@ -216,3 +200,34 @@ function confirmRide() {
         alert('An error occurred while confirming the ride. Please try again.');
     });
 }
+
+// Fetch and display confirmed rides
+function fetchConfirmedRides() {
+    fetch('http://127.0.0.1:5000/confirmed-rides')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Confirmed Rides:', data);
+            // Display the confirmed rides in the UI (you can customize this part)
+            const confirmedRidesDiv = document.getElementById('confirmed-rides');
+            confirmedRidesDiv.innerHTML = '<h2>Confirmed Rides</h2>';
+            data.forEach(ride => {
+                confirmedRidesDiv.innerHTML += `
+                    <div class="ride-details">
+                        <p><strong>Rider:</strong> ${ride.riderName}</p>
+                        <p><strong>From:</strong> ${ride.from}</p>
+                        <p><strong>To:</strong> ${ride.to}</p>
+                        <p><strong>Vehicle:</strong> ${ride.vehicleType}</p>
+                        <p><strong>Commission:</strong> ${ride.commission} TZS</p>
+                        <p><strong>Total Price:</strong> ${ride.total_price} TZS</p>
+                        <hr>
+                    </div>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching confirmed rides:', error);
+        });
+}
+
+// Call fetchConfirmedRides to display confirmed rides when the page loads
+fetchConfirmedRides();
