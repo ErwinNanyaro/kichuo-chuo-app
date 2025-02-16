@@ -1,8 +1,15 @@
 let locationsData = []; // Store locations data globally
+let selectedVehicle = null; // Store the selected vehicle type
 
 // Connect to the WebSocket server
-const socket = io('https://71c7-197-186-5-3.ngrok-free.app', {
+const socket = io('http://127.0.0.1:5000', {
     transports: ['websocket']  // Force WebSocket transport
+});
+
+// Handle WebSocket connection errors
+socket.on('connect_error', (error) => {
+    console.error('WebSocket connection error:', error);
+    alert('Failed to connect to the server. Please try again.');
 });
 
 socket.on('connect', () => {
@@ -12,10 +19,6 @@ socket.on('connect', () => {
 // Listen for ride confirmation notifications
 socket.on('ride_confirmed', (data) => {
     alert(`New ride confirmed: ${JSON.stringify(data)}`);
-});
-
-socket.on('connect', () => {
-    console.log('Connected to WebSocket server');
 });
 
 // Fetch locations from the backend
