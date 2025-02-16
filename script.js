@@ -164,12 +164,22 @@ function getRiders() {
 
 // Confirm ride
 function confirmRide() {
+    const passengerName = prompt("Enter your name:"); // Get passenger name
+    const passengerPhone = prompt("Enter your phone number:"); // Get passenger phone
+
+    if (!passengerName || !passengerPhone) {
+        alert("Please provide your name and phone number.");
+        return;
+    }
+
     const riderName = document.getElementById('rider-name').textContent;
     const riderPhone = document.getElementById('rider-phone').textContent;
     const riderVehicleType = document.getElementById('rider-vehicle-type').textContent;
     const riderZone = document.getElementById('rider-zone').textContent;
 
     const rideDetails = {
+        passengerName,
+        passengerPhone,
         riderName,
         riderPhone,
         riderVehicleType,
@@ -195,7 +205,10 @@ function confirmRide() {
         return response.json();
     })
     .then(data => {
-        alert('Ride confirmed! The rider has been notified.');
+        alert(`Ride confirmed!\n
+               Ride Price: ${data.ride_price_tzs} TZS\n
+               Commission: ${data.commission_tzs} TZS\n
+               Net Amount: ${data.net_amount_tzs} TZS`);
         console.log('Ride Details:', data);
     })
     .catch(error => {
