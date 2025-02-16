@@ -113,8 +113,8 @@ document.querySelectorAll('.vehicle-card').forEach(card => {
         // Store the selected vehicle type
         selectedVehicle = card.getAttribute('data-vehicle');
 
-        // Show the "Find Riders" button
-        document.getElementById('find-rider-btn').style.display = 'block';
+        // Fetch riders automatically
+        getRiders();
     });
 });
 
@@ -213,14 +213,12 @@ function confirmRide() {
         alert('An error occurred while confirming the ride. Please try again.');
     });
 }
-
 // Fetch and display confirmed rides
 function fetchConfirmedRides() {
     fetch('http://127.0.0.1:5000/confirmed-rides')
         .then(response => response.json())
         .then(data => {
             console.log('Confirmed Rides:', data);
-            // Display the confirmed rides in the UI (you can customize this part)
             const confirmedRidesDiv = document.getElementById('confirmed-rides');
             confirmedRidesDiv.innerHTML = '<h2>Confirmed Rides</h2>';
             data.forEach(ride => {
