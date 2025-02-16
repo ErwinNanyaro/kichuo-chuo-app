@@ -161,12 +161,22 @@ function getRiders() {
 
 // Confirm ride
 function confirmRide() {
+    const passengerName = prompt("Enter your name:"); // Get passenger name
+    const passengerPhone = prompt("Enter your phone number:"); // Get passenger phone
+
+    if (!passengerName || !passengerPhone) {
+        alert("Please provide your name and phone number.");
+        return;
+    }
+
     const riderName = document.getElementById('rider-name').textContent;
     const riderPhone = document.getElementById('rider-phone').textContent;
     const riderVehicleType = document.getElementById('rider-vehicle-type').textContent;
     const riderZone = document.getElementById('rider-zone').textContent;
 
     const rideDetails = {
+        passengerName,
+        passengerPhone,
         riderName,
         riderPhone,
         riderVehicleType,
@@ -178,7 +188,7 @@ function confirmRide() {
     };
 
     // Send ride details to the backend
-    fetch('http://127.0.0.1:5000/confirm-ride', {
+    fetch('https://a5af-197-186-3-150.ngrok-free.app/confirm-ride', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -192,7 +202,10 @@ function confirmRide() {
         return response.json();
     })
     .then(data => {
-        alert(`Ride confirmed! The rider has been notified.\nCommission: ${data.commission} TZS\nTotal Price: ${data.total_price} TZS`);
+        alert(`Ride confirmed!\n
+               Ride Price: ${data.ride_price_tzs} TZS\n
+               Commission: ${data.commission_tzs} TZS\n
+               Net Amount: ${data.net_amount_tzs} TZS`);
         console.log('Ride Details:', data);
     })
     .catch(error => {
