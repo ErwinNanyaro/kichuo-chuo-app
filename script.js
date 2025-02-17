@@ -66,7 +66,7 @@ function getRoutes() {
         return;
     }
 
-    fetch(`https://a5af-197-186-3-150.ngrok-free.app/routes?from=${from}&to=${to}`)
+    fetch(`https://a5af-197-186-3-150.ngrok-free.app/routes?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
