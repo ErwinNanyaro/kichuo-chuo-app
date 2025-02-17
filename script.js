@@ -66,7 +66,7 @@ function getRoutes() {
         return;
     }
 
-    fetch(`http://127.0.0.1:5000/routes?from=${from}&to=${to}`)
+    fetch(`https://a5af-197-186-3-150.ngrok-free.app/routes?from=${from}&to=${to}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -81,11 +81,24 @@ function getRoutes() {
                 resultsDiv.innerHTML = '<p>No routes found for the selected locations.</p>';
             } else {
                 const route = data[0]; // Assuming only one route is returned
-                const vehicleCards = document.querySelectorAll('.vehicle-card');
-                vehicleCards.forEach(card => {
-                    const vehicleType = card.getAttribute('data-vehicle');
-                    const priceSpan = card.querySelector('.price');
-                    priceSpan.textContent = route[`${vehicleType}Price`];
+
+                // Hide all vehicle cards initially
+                document.querySelectorAll('.vehicle-card').forEach(card => {
+                    card.style.display = 'none';
+                });
+
+                // Show only available vehicles
+                const vehicleTypes = ['Motorcycle', 'Bajaji', 'Car'];
+                vehicleTypes.forEach(vehicleType => {
+                    const price = route[`${vehicleType}Price`];
+                    if (price > 0) {
+                        const card = document.querySelector(`.vehicle-card[data-vehicle="${vehicleType}"]`);
+                        if (card) {
+                            card.style.display = 'block';
+                            const priceSpan = card.querySelector('.price');
+                            priceSpan.textContent = `${price} TZS`;
+                        }
+                    }
                 });
 
                 // Show vehicle selection
