@@ -213,6 +213,7 @@ function confirmRide() {
         alert('An error occurred while confirming the ride. Please try again.');
     });
 }
+
 // Fetch and display confirmed rides
 function fetchConfirmedRides() {
     fetch('http://127.0.0.1:5000/confirmed-rides')
