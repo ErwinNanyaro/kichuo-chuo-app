@@ -81,24 +81,11 @@ function getRoutes() {
                 resultsDiv.innerHTML = '<p>No routes found for the selected locations.</p>';
             } else {
                 const route = data[0]; // Assuming only one route is returned
-
-                // Hide all vehicle cards initially
-                document.querySelectorAll('.vehicle-card').forEach(card => {
-                    card.style.display = 'none';
-                });
-
-                // Show only available vehicles
-                const vehicleTypes = ['Motorcycle', 'Bajaji', 'Car'];
-                vehicleTypes.forEach(vehicleType => {
-                    const price = route[`${vehicleType}Price`];
-                    if (price > 0) {
-                        const card = document.querySelector(`.vehicle-card[data-vehicle="${vehicleType}"]`);
-                        if (card) {
-                            card.style.display = 'block';
-                            const priceSpan = card.querySelector('.price');
-                            priceSpan.textContent = `${price} TZS`;
-                        }
-                    }
+                const vehicleCards = document.querySelectorAll('.vehicle-card');
+                vehicleCards.forEach(card => {
+                    const vehicleType = card.getAttribute('data-vehicle');
+                    const priceSpan = card.querySelector('.price');
+                    priceSpan.textContent = route[`${vehicleType}Price`];
                 });
 
                 // Show vehicle selection
@@ -126,8 +113,8 @@ document.querySelectorAll('.vehicle-card').forEach(card => {
         // Store the selected vehicle type
         selectedVehicle = card.getAttribute('data-vehicle');
 
-        // Show the "Find Riders" button
-        document.getElementById('find-rider-btn').style.display = 'block';
+        // Fetch riders automatically
+        getRiders();
     });
 });
 
@@ -201,7 +188,7 @@ function confirmRide() {
     };
 
     // Send ride details to the backend
-    fetch('http://127.0.0.1:5000/confirm-ride', {
+    fetch('https://a5af-197-186-3-150.ngrok-free.app/confirm-ride', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -226,14 +213,12 @@ function confirmRide() {
         alert('An error occurred while confirming the ride. Please try again.');
     });
 }
-
 // Fetch and display confirmed rides
 function fetchConfirmedRides() {
     fetch('http://127.0.0.1:5000/confirmed-rides')
         .then(response => response.json())
         .then(data => {
             console.log('Confirmed Rides:', data);
-            // Display the confirmed rides in the UI (you can customize this part)
             const confirmedRidesDiv = document.getElementById('confirmed-rides');
             confirmedRidesDiv.innerHTML = '<h2>Confirmed Rides</h2>';
             data.forEach(ride => {
