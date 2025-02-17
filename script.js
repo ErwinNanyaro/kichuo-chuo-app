@@ -66,7 +66,7 @@ function getRoutes() {
         return;
     }
 
-    fetch(`https://a5af-197-186-3-150.ngrok-free.app/routes?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
+    fetch(`http://127.0.0.1:5000/routes?from=${from}&to=${to}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -126,8 +126,8 @@ document.querySelectorAll('.vehicle-card').forEach(card => {
         // Store the selected vehicle type
         selectedVehicle = card.getAttribute('data-vehicle');
 
-        // Fetch riders automatically
-        getRiders();
+        // Show the "Find Riders" button
+        document.getElementById('find-rider-btn').style.display = 'block';
     });
 });
 
@@ -201,7 +201,7 @@ function confirmRide() {
     };
 
     // Send ride details to the backend
-    fetch('https://a5af-197-186-3-150.ngrok-free.app/confirm-ride', {
+    fetch('http://127.0.0.1:5000/confirm-ride', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -226,12 +226,14 @@ function confirmRide() {
         alert('An error occurred while confirming the ride. Please try again.');
     });
 }
+
 // Fetch and display confirmed rides
 function fetchConfirmedRides() {
     fetch('http://127.0.0.1:5000/confirmed-rides')
         .then(response => response.json())
         .then(data => {
             console.log('Confirmed Rides:', data);
+            // Display the confirmed rides in the UI (you can customize this part)
             const confirmedRidesDiv = document.getElementById('confirmed-rides');
             confirmedRidesDiv.innerHTML = '<h2>Confirmed Rides</h2>';
             data.forEach(ride => {
