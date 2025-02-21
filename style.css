@@ -29,6 +29,7 @@ h1 {
 .form-group {
     margin-bottom: 15px;
     text-align: left;
+    position: relative; /* Needed for absolute positioning of suggestions */
 }
 
 label {
@@ -37,16 +38,24 @@ label {
     font-weight: bold;
 }
 
-select, button {
+/* Style for input fields to match the dropdowns */
+input[type="text"] {
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
+    box-sizing: border-box; /* Ensure padding is included in the width */
 }
 
 button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
     background-color: #4CAF50;
     color: white;
     border: none;
@@ -102,6 +111,7 @@ button:hover {
     text-align: left;
     margin-top: 20px;
 }
+
 /* Autocomplete Suggestions */
 .suggestions {
     position: absolute;
