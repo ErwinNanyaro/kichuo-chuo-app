@@ -26,16 +26,45 @@ fetch('http://127.0.0.1:5000/locations')
     .then(response => response.json())
     .then(data => {
         locationsData = data; // Store locations data
-        const fromSelect = document.getElementById('from');
-        const toSelect = document.getElementById('to');
-        data.forEach(location => {
-            const option = document.createElement('option');
-            option.value = location.LocationName;
-            option.text = location.LocationName;
-            fromSelect.add(option);
-            toSelect.add(option.cloneNode(true));
-        });
     });
+
+// Show autocomplete suggestions
+function showSuggestions(inputId) {
+    const input = document.getElementById(inputId);
+    const suggestionsDiv = document.getElementById(`${inputId}-suggestions`);
+    const inputValue = input.value.toLowerCase();
+
+    // Clear previous suggestions
+    suggestionsDiv.innerHTML = '';
+
+    if (inputValue.length === 0) {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+
+    // Filter matching locations
+    const matchingLocations = locationsData.filter(location =>
+        location.LocationName.toLowerCase().startsWith(inputValue)
+    );
+
+    if (matchingLocations.length > 0) {
+        matchingLocations.forEach(location => {
+            const suggestion = document.createElement('div');
+            suggestion.textContent = location.LocationName;
+            suggestion.onclick = () => {
+                input.value = location.LocationName;
+                suggestionsDiv.style.display = 'none';
+                if (inputId === 'from') {
+                    updateZone();
+                }
+            };
+            suggestionsDiv.appendChild(suggestion);
+        });
+        suggestionsDiv.style.display = 'block';
+    } else {
+        suggestionsDiv.style.display = 'none';
+    }
+}
 
 // Update the FromLocation zone when a location is selected
 function updateZone() {
@@ -188,7 +217,7 @@ function confirmRide() {
     };
 
     // Send ride details to the backend
-    fetch('https://a5af-197-186-3-150.ngrok-free.app/confirm-ride', {
+    fetch('http://127.0.0.1:5000/confirm-ride', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -207,6 +236,7 @@ function confirmRide() {
                Commission: ${data.commission_tzs} TZS\n
                Net Amount: ${data.net_amount_tzs} TZS`);
         console.log('Ride Details:', data);
+        fetchConfirmedRides(); // Refresh the confirmed rides list
     })
     .catch(error => {
         console.error('Error confirming ride:', error);
@@ -225,12 +255,16 @@ function fetchConfirmedRides() {
             data.forEach(ride => {
                 confirmedRidesDiv.innerHTML += `
                     <div class="ride-details">
-                        <p><strong>Rider:</strong> ${ride.riderName}</p>
-                        <p><strong>From:</strong> ${ride.from}</p>
-                        <p><strong>To:</strong> ${ride.to}</p>
-                        <p><strong>Vehicle:</strong> ${ride.vehicleType}</p>
-                        <p><strong>Commission:</strong> ${ride.commission} TZS</p>
-                        <p><strong>Total Price:</strong> ${ride.total_price} TZS</p>
+                        <p><strong>Passenger:</strong> ${ride.PassengerName}</p>
+                        <p><strong>Phone:</strong> ${ride.PassengerPhone}</p>
+                        <p><strong>Rider:</strong> ${ride.RiderName}</p>
+                        <p><strong>From:</strong> ${ride.FromLocation}</p>
+                        <p><strong>To:</strong> ${ride.ToLocation}</p>
+                        <p><strong>Vehicle:</strong> ${ride.VehicleType}</p>
+                        <p><strong>Ride Price:</strong> ${ride.RidePriceTZS} TZS</p>
+                        <p><strong>Commission:</strong> ${ride.CommissionTZS} TZS</p>
+                        <p><strong>Net Amount:</strong> ${ride.NetAmountTZS} TZS</p>
+                        <p><strong>Timestamp:</strong> ${ride.Timestamp}</p>
                         <hr>
                     </div>
                 `;
