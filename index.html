@@ -12,18 +12,14 @@
         <h1>Welcome to Kichuo Chuo!</h1>
         <div class="form-group">
             <label for="from">From:</label>
-            <select id="from" onchange="updateZone()">
-                <option value="">Select a location</option>
-                <!-- Options will be populated dynamically -->
-            </select>
+            <input type="text" id="from" placeholder="Type a location" oninput="showSuggestions('from')">
+            <div id="from-suggestions" class="suggestions"></div>
             <input type="hidden" id="from-zone" value="">
         </div>
         <div class="form-group">
             <label for="to">To:</label>
-            <select id="to">
-                <option value="">Select a location</option>
-                <!-- Options will be populated dynamically -->
-            </select>
+            <input type="text" id="to" placeholder="Type a location" oninput="showSuggestions('to')">
+            <div id="to-suggestions" class="suggestions"></div>
         </div>
         <button onclick="getRoutes()">Get Routes</button>
         <div id="results"></div>
