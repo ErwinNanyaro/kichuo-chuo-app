@@ -29,6 +29,7 @@ h1 {
 .form-group {
     margin-bottom: 15px;
     text-align: left;
+    position: relative;
 }
 
 label {
@@ -37,7 +38,7 @@ label {
     font-weight: bold;
 }
 
-select, button {
+input, button {
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
@@ -94,14 +95,34 @@ button:hover {
     margin: 0;
 }
 
-#find-rider-btn {
-    margin-top: 20px;
-}
-
 #rider-details {
     text-align: left;
     margin-top: 20px;
 }
+
+/* Autocomplete Suggestions */
+.suggestions {
+    position: absolute;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    z-index: 1000;
+    display: none;
+}
+
+.suggestions div {
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.suggestions div:hover {
+    background-color: #f0f0f0;
+}
+
 /* Confirmed Rides Section */
 #confirmed-rides {
     margin-top: 30px;
