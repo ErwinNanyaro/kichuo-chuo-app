@@ -1,26 +1,6 @@
 let locationsData = []; // Store locations data globally
 let selectedVehicle = null; // Store the selected vehicle type
 
-// Connect to the WebSocket server
-const socket = io('http://127.0.0.1:5000', {
-    transports: ['websocket']  // Force WebSocket transport
-});
-
-// Handle WebSocket connection errors
-socket.on('connect_error', (error) => {
-    console.error('WebSocket connection error:', error);
-    alert('Failed to connect to the server. Please try again.');
-});
-
-socket.on('connect', () => {
-    console.log('Connected to WebSocket server');
-});
-
-// Listen for ride confirmation notifications
-socket.on('ride_confirmed', (data) => {
-    alert(`New ride confirmed: ${JSON.stringify(data)}`);
-});
-
 // Fetch locations from the backend
 fetch('http://127.0.0.1:5000/locations')
     .then(response => response.json())
@@ -28,62 +8,51 @@ fetch('http://127.0.0.1:5000/locations')
         locationsData = data; // Store locations data
     });
 
-// Show autocomplete suggestions
-function showSuggestions(inputId) {
-    const input = document.getElementById(inputId);
-    const suggestionsDiv = document.getElementById(`${inputId}-suggestions`);
-    const inputValue = input.value.toLowerCase();
+// Function to filter and display locations
+function filterLocations(field) {
+    const input = document.getElementById(field).value.toLowerCase();
+    const suggestionsDiv = document.getElementById(`${field}-suggestions`);
+    suggestionsDiv.innerHTML = ''; // Clear previous suggestions
 
-    // Clear previous suggestions
-    suggestionsDiv.innerHTML = '';
-
-    if (inputValue.length === 0) {
-        suggestionsDiv.style.display = 'none';
+    if (!input) {
+        suggestionsDiv.style.display = 'none'; // Hide suggestions if input is empty
         return;
     }
 
-    // Filter matching locations
-    const matchingLocations = locationsData.filter(location =>
-        location.LocationName.toLowerCase().startsWith(inputValue)
+    // Filter locations that match the input
+    const filteredLocations = locationsData.filter(location =>
+        location.LocationName.toLowerCase().startsWith(input)
     );
 
-    if (matchingLocations.length > 0) {
-        matchingLocations.forEach(location => {
+    if (filteredLocations.length > 0) {
+        // Display matching locations
+        filteredLocations.forEach(location => {
             const suggestion = document.createElement('div');
             suggestion.textContent = location.LocationName;
             suggestion.onclick = () => {
-                input.value = location.LocationName;
-                suggestionsDiv.style.display = 'none';
-                if (inputId === 'from') {
-                    updateZone();
+                document.getElementById(field).value = location.LocationName;
+                suggestionsDiv.style.display = 'none'; // Hide suggestions after selection
+
+                // Update the zone for "From" field
+                if (field === 'from') {
+                    document.getElementById('from-zone').value = location['Zone '] || location.Zone;
                 }
             };
             suggestionsDiv.appendChild(suggestion);
         });
-        suggestionsDiv.style.display = 'block';
+        suggestionsDiv.style.display = 'block'; // Show suggestions
     } else {
-        suggestionsDiv.style.display = 'none';
+        suggestionsDiv.style.display = 'none'; // Hide suggestions if no matches
     }
 }
 
-// Update the FromLocation zone when a location is selected
-function updateZone() {
-    const fromLocation = document.getElementById('from').value;
-    const selectedLocation = locationsData.find(location => location.LocationName === fromLocation);
-    const zoneInput = document.getElementById('from-zone'); // Get the hidden input field
-
-    console.log('Selected Location:', selectedLocation); // Debugging
-    console.log('Zone Input Element:', zoneInput); // Debugging
-
-    if (selectedLocation && zoneInput) {
-        // Handle the extra space in the "Zone " property
-        const zone = selectedLocation['Zone '] || selectedLocation.Zone; // Use 'Zone ' or 'Zone'
-        zoneInput.value = zone; // Update the hidden input field
-        console.log('Updated Zone:', zoneInput.value); // Debugging
-    } else {
-        console.error('Error: Could not update zone. Check if the "from-zone" input field exists.');
+// Close suggestions when clicking outside
+document.addEventListener('click', (event) => {
+    if (!event.target.matches('#from, #to')) {
+        document.getElementById('from-suggestions').style.display = 'none';
+        document.getElementById('to-suggestions').style.display = 'none';
     }
-}
+});
 
 // Fetch routes and prices
 function getRoutes() {
@@ -91,7 +60,7 @@ function getRoutes() {
     const to = document.getElementById('to').value;
 
     if (!from || !to) {
-        alert('Please select both "From" and "To" locations.');
+        alert('Please type both "From" and "To" locations.');
         return;
     }
 
@@ -236,7 +205,6 @@ function confirmRide() {
                Commission: ${data.commission_tzs} TZS\n
                Net Amount: ${data.net_amount_tzs} TZS`);
         console.log('Ride Details:', data);
-        fetchConfirmedRides(); // Refresh the confirmed rides list
     })
     .catch(error => {
         console.error('Error confirming ride:', error);
@@ -255,16 +223,12 @@ function fetchConfirmedRides() {
             data.forEach(ride => {
                 confirmedRidesDiv.innerHTML += `
                     <div class="ride-details">
-                        <p><strong>Passenger:</strong> ${ride.PassengerName}</p>
-                        <p><strong>Phone:</strong> ${ride.PassengerPhone}</p>
-                        <p><strong>Rider:</strong> ${ride.RiderName}</p>
-                        <p><strong>From:</strong> ${ride.FromLocation}</p>
-                        <p><strong>To:</strong> ${ride.ToLocation}</p>
-                        <p><strong>Vehicle:</strong> ${ride.VehicleType}</p>
-                        <p><strong>Ride Price:</strong> ${ride.RidePriceTZS} TZS</p>
-                        <p><strong>Commission:</strong> ${ride.CommissionTZS} TZS</p>
-                        <p><strong>Net Amount:</strong> ${ride.NetAmountTZS} TZS</p>
-                        <p><strong>Timestamp:</strong> ${ride.Timestamp}</p>
+                        <p><strong>Rider:</strong> ${ride.riderName}</p>
+                        <p><strong>From:</strong> ${ride.from}</p>
+                        <p><strong>To:</strong> ${ride.to}</p>
+                        <p><strong>Vehicle:</strong> ${ride.vehicleType}</p>
+                        <p><strong>Commission:</strong> ${ride.commission} TZS</p>
+                        <p><strong>Total Price:</strong> ${ride.total_price} TZS</p>
                         <hr>
                     </div>
                 `;
