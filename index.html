@@ -5,20 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kichuo Chuo</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Welcome to Kichuo Chuo!</h1>
         <div class="form-group">
             <label for="from">From:</label>
-            <input type="text" id="from" placeholder="Type a location" oninput="showSuggestions('from')">
+            <input type="text" id="from" placeholder="Type your location..." oninput="filterLocations('from')">
             <div id="from-suggestions" class="suggestions"></div>
             <input type="hidden" id="from-zone" value="">
         </div>
         <div class="form-group">
             <label for="to">To:</label>
-            <input type="text" id="to" placeholder="Type a location" oninput="showSuggestions('to')">
+            <input type="text" id="to" placeholder="Type your location..." oninput="filterLocations('to')">
             <div id="to-suggestions" class="suggestions"></div>
         </div>
         <button onclick="getRoutes()">Get Routes</button>
