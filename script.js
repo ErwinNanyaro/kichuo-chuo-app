@@ -1,4 +1,78 @@
-let locationsData = []; // Store locations data globally
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+// Request notification permission
+function requestNotificationPermission() {
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            console.log('Notification permission granted.');
+            getDeviceToken();
+        } else {
+            console.log('Unable to get permission to notify.');
+        }
+    });
+}
+
+// Get device token
+function getDeviceToken() {
+    messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY' }).then((currentToken) => {
+        if (currentToken) {
+            console.log('Device Token:', currentToken);
+            sendTokenToServer(currentToken);
+        } else {
+            console.log('No registration token available.');
+        }
+    }).catch((err) => {
+        console.log('An error occurred while retrieving token:', err);
+    });
+}
+
+// Send device token to the backend
+function sendTokenToServer(token) {
+    const riderPhone = '1234567890'; // Replace with the rider's phone number
+    fetch('http://127.0.0.1:5000/register-device-token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            riderPhone: riderPhone,
+            deviceToken: token
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Device token registered:', data);
+    })
+    .catch(error => {
+        console.error('Error registering device token:', error);
+    });
+}
+
+// Handle foreground messages
+messaging.onMessage((payload) => {
+    console.log('Received foreground message:', payload);
+    const notificationTitle = payload.notification.title;
+    const notificationOptions = {
+        body: payload.notification.body,
+        icon: '/path/to/icon.png'
+    };
+    new Notification(notificationTitle, notificationOptions);
+});
+
+// Store locations data globally
+let locationsData = [];
 let selectedVehicle = null; // Store the selected vehicle type
 
 // Fetch locations from the backend
@@ -241,3 +315,6 @@ function fetchConfirmedRides() {
 
 // Call fetchConfirmedRides to display confirmed rides when the page loads
 fetchConfirmedRides();
+
+// Request notification permission when the page loads
+requestNotificationPermission();
