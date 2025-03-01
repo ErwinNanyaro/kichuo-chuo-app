@@ -22,8 +22,12 @@ function requestNotificationPermission() {
             console.log('Notification permission granted.');
             // Get the device token
             getDeviceToken();
-        } else {
+        } else if (permission === 'denied') {
             console.log('Notification permission denied.');
+            alert('Please enable notifications to receive ride updates.');
+        } else {
+            console.log('Notification permission blocked.');
+            alert('Notifications are blocked. Please enable them in your browser settings.');
         }
     }).catch(error => {
         console.error('Error requesting notification permission:', error);
@@ -39,9 +43,15 @@ function getDeviceToken() {
             registerDeviceToken(currentToken);
         } else {
             console.log('No registration token available. Request permission to generate one.');
+            requestNotificationPermission(); // Request permission again if no token is available
         }
     }).catch((err) => {
         console.error('Error retrieving token:', err);
+        if (err.code === 'messaging/permission-blocked') {
+            alert('Notifications are blocked. Please enable them in your browser settings.');
+        } else {
+            console.error('Error retrieving token:', err);
+        }
     });
 }
 
@@ -231,57 +241,70 @@ function getRiders() {
 
 // Confirm ride
 function confirmRide() {
-    const passengerName = prompt("Enter your name:"); // Get passenger name
-    const passengerPhone = prompt("Enter your phone number:"); // Get passenger phone
-
-    if (!passengerName || !passengerPhone) {
-        alert("Please provide your name and phone number.");
+    // Fetch passenger details from the backend using their MobileContact
+    const passengerPhone = localStorage.getItem('passengerPhone'); // Assuming the passenger's phone is stored in localStorage after login
+    if (!passengerPhone) {
+        alert('Passenger not logged in. Please log in first.');
         return;
     }
 
-    const riderName = document.getElementById('rider-name').textContent;
-    const riderPhone = document.getElementById('rider-phone').textContent;
-    const riderVehicleType = document.getElementById('rider-vehicle-type').textContent;
-    const riderZone = document.getElementById('rider-zone').textContent;
+    fetch(`http://127.0.0.1:5000/passenger-details?mobileContact=${passengerPhone}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(passenger => {
+            const passengerName = `${passenger.FirstName} ${passenger.LastName}`;
+            const riderName = document.getElementById('rider-name').textContent;
+            const riderPhone = document.getElementById('rider-phone').textContent;
+            const riderVehicleType = document.getElementById('rider-vehicle-type').textContent;
+            const riderZone = document.getElementById('rider-zone').textContent;
 
-    const rideDetails = {
-        passengerName,
-        passengerPhone,
-        riderName,
-        riderPhone,
-        riderVehicleType,
-        riderZone,
-        from: document.getElementById('from').value,
-        to: document.getElementById('to').value,
-        vehicleType: selectedVehicle,
-        timestamp: new Date().toISOString()
-    };
+            const rideDetails = {
+                passengerName,
+                passengerPhone,
+                riderName,
+                riderPhone,
+                riderVehicleType,
+                riderZone,
+                from: document.getElementById('from').value,
+                to: document.getElementById('to').value,
+                vehicleType: selectedVehicle,
+                timestamp: new Date().toISOString()
+            };
 
-    // Send ride details to the backend
-    fetch('http://127.0.0.1:5000/confirm-ride', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(rideDetails)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        alert(`Ride confirmed!\n
-               Ride Price: ${data.ride_price_tzs} TZS\n
-               Commission: ${data.commission_tzs} TZS\n
-               Net Amount: ${data.net_amount_tzs} TZS`);
-        console.log('Ride Details:', data);
-    })
-    .catch(error => {
-        console.error('Error confirming ride:', error);
-        alert('An error occurred while confirming the ride. Please try again.');
-    });
+            // Send ride details to the backend
+            fetch('http://127.0.0.1:5000/confirm-ride', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(rideDetails)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(`Ride confirmed!\n
+                       Ride Price: ${data.ride_price_tzs} TZS\n
+                       Commission: ${data.commission_tzs} TZS\n
+                       Net Amount: ${data.net_amount_tzs} TZS`);
+                console.log('Ride Details:', data);
+            })
+            .catch(error => {
+                console.error('Error confirming ride:', error);
+                alert('An error occurred while confirming the ride. Please try again.');
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching passenger details:', error);
+            alert('An error occurred while fetching passenger details. Please try again.');
+        });
 }
 
 // Fetch and display confirmed rides
