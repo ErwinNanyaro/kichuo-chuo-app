@@ -241,13 +241,14 @@ function getRiders() {
 
 // Confirm ride
 function confirmRide() {
-    // Fetch passenger details from the backend using their MobileContact
-    const passengerPhone = localStorage.getItem('passengerPhone'); // Assuming the passenger's phone is stored in localStorage after login
+    // Retrieve the passenger's MobileContact from sessionStorage
+    const passengerPhone = sessionStorage.getItem('passengerPhone');
     if (!passengerPhone) {
         alert('Passenger not logged in. Please log in first.');
         return;
     }
 
+    // Fetch passenger details from the backend
     fetch(`http://127.0.0.1:5000/passenger-details?mobileContact=${passengerPhone}`)
         .then(response => {
             if (!response.ok) {
