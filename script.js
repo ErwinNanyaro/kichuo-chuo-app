@@ -58,7 +58,7 @@ function getDeviceToken() {
 // Function to register the device token
 function registerDeviceToken(deviceToken) {
     const riderPhone = 'RIDER_PHONE_NUMBER'; // Replace with the rider's phone number
-    fetch('http://192.168.1.179:5000/register-device-token', {
+    fetch('http://192.168.1.122:5000/register-device-token', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -87,7 +87,7 @@ function loginPassenger() {
     }
 
     // Send the phone number to the backend for verification
-    fetch('http://192.168.1.179:5000/login-passenger', {
+    fetch('http://192.168.1.122:5000/login-passenger', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -124,7 +124,7 @@ function loginPassenger() {
 let locationsData = [];
 
 // Fetch locations from the backend
-fetch('http://192.168.1.179:5000/locations')
+fetch('http://192.168.1.122:5000/locations')
     .then(response => response.json())
     .then(data => {
         locationsData = data; // Store locations data
@@ -189,7 +189,7 @@ function getRoutes() {
         return;
     }
 
-    fetch(`http://192.168.1.179:5000/routes?from=${from}&to=${to}`)
+    fetch(`http://192.168.1.122:5000/routes?from=${from}&to=${to}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -256,7 +256,7 @@ function getRiders() {
         return;
     }
 
-    fetch(`http://192.168.1.179:5000/riders?vehicle_type=${selectedVehicle}&zone=${zone}`)
+    fetch(`http://192.168.1.122:5000/riders?vehicle_type=${selectedVehicle}&zone=${zone}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -292,7 +292,7 @@ function confirmRide() {
     }
 
     // Fetch passenger details from the backend
-    fetch(`http://192.168.1.179:5000/passenger-details?mobileContact=${passengerPhone}`)
+    fetch(`http://192.168.1.122:5000/passenger-details?mobileContact=${passengerPhone}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -320,7 +320,7 @@ function confirmRide() {
             };
 
             // Send ride details to the backend
-            fetch('http://192.168.1.179:5000/confirm-ride', {
+            fetch('http://192.168.1.122:5000/confirm-ride', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -353,7 +353,7 @@ function confirmRide() {
 
 // Fetch and display confirmed rides
 function fetchConfirmedRides() {
-    fetch('http://192.168.1.179:5000/confirmed-rides')
+    fetch('http://192.168.1.122:5000/confirmed-rides')
         .then(response => response.json())
         .then(data => {
             console.log('Confirmed Rides:', data);
