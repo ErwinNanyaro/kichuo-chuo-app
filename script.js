@@ -101,8 +101,8 @@ function filterLocations(field) {
     const suggestionsDiv = document.getElementById(`${field}-suggestions`);
     suggestionsDiv.innerHTML = ''; // Clear previous suggestions
 
-    if (!input) {
-        suggestionsDiv.style.display = 'none'; // Hide suggestions if input is empty
+    if (!input || !locationsData.length) {
+        suggestionsDiv.style.display = 'none'; // Hide suggestions if input is empty or data is not loaded
         return;
     }
 
