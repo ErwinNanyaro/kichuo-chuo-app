@@ -32,7 +32,7 @@ function requestNotificationPermission() {
 
 // Function to get the device token
 function getDeviceToken() {
-    messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY' }).then((currentToken) => {
+    messaging.getToken({ vapidKey: 'BEngFTBc5Zl9kpbnusb3F9WNwtZBimR37sw2fMkzuI6et5J342u2gPULKmpyn99-it-K5k7VObyKNdqlGN1pigY' }).then((currentToken) => {
         if (currentToken) {
             console.log('Device token:', currentToken);
             // Send the token to the backend for registration
