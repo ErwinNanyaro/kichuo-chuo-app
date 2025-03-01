@@ -11,49 +11,60 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Kichuo Chuo!</h1>
+    <div id="login-section">
+        <h2>Passenger Login</h2>
         <div class="form-group">
-            <label for="from">From:</label>
-            <input type="text" id="from" placeholder="Type your location..." oninput="filterLocations('from')">
-            <div id="from-suggestions" class="suggestions"></div>
-            <input type="hidden" id="from-zone" value="">
+            <label for="login-phone">Phone Number:</label>
+            <input type="text" id="login-phone" placeholder="Enter your phone number">
         </div>
-        <div class="form-group">
-            <label for="to">To:</label>
-            <input type="text" id="to" placeholder="Type your location..." oninput="filterLocations('to')">
-            <div id="to-suggestions" class="suggestions"></div>
-        </div>
-        <button onclick="getRoutes()">Get Routes</button>
-        <div id="results"></div>
-        <div id="vehicle-selection" style="display: none;">
-            <h2>Choose Your Vehicle:</h2>
-            <div class="vehicle-options">
-                <div class="vehicle-card" data-vehicle="Motorcycle">
-                    <img src="motorbike.png" alt="Motorcycle">
-                    <p>Motorcycle: <span class="price"></span> TZS</p>
-                </div>
-                <div class="vehicle-card" data-vehicle="Bajaji">
-                    <img src="tuktuk.png" alt="Bajaji">
-                    <p>Bajaji: <span class="price"></span> TZS</p>
-                </div>
-                <div class="vehicle-card" data-vehicle="Car">
-                    <img src="taxi.png" alt="Car">
-                    <p>Car: <span class="price"></span> TZS</p>
+        <button onclick="loginPassenger()">Login</button>
+    </div>
+
+    <div id="main-app" style="display: none;">
+        <div class="container">
+            <h1>Welcome to Kichuo Chuo!</h1>
+            <div class="form-group">
+                <label for="from">From:</label>
+                <input type="text" id="from" placeholder="Type your location..." oninput="filterLocations('from')">
+                <div id="from-suggestions" class="suggestions"></div>
+                <input type="hidden" id="from-zone" value="">
+            </div>
+            <div class="form-group">
+                <label for="to">To:</label>
+                <input type="text" id="to" placeholder="Type your location..." oninput="filterLocations('to')">
+                <div id="to-suggestions" class="suggestions"></div>
+            </div>
+            <button onclick="getRoutes()">Get Routes</button>
+            <div id="results"></div>
+            <div id="vehicle-selection" style="display: none;">
+                <h2>Choose Your Vehicle:</h2>
+                <div class="vehicle-options">
+                    <div class="vehicle-card" data-vehicle="Motorcycle">
+                        <img src="motorbike.png" alt="Motorcycle">
+                        <p>Motorcycle: <span class="price"></span> TZS</p>
+                    </div>
+                    <div class="vehicle-card" data-vehicle="Bajaji">
+                        <img src="tuktuk.png" alt="Bajaji">
+                        <p>Bajaji: <span class="price"></span> TZS</p>
+                    </div>
+                    <div class="vehicle-card" data-vehicle="Car">
+                        <img src="taxi.png" alt="Car">
+                        <p>Car: <span class="price"></span> TZS</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div id="rider-details" style="display: none;">
-            <h2>Rider Details</h2>
-            <p><strong>Name:</strong> <span id="rider-name"></span></p>
-            <p><strong>Phone:</strong> <span id="rider-phone"></span></p>
-            <p><strong>Vehicle Type:</strong> <span id="rider-vehicle-type"></span></p>
-            <p><strong>Zone:</strong> <span id="rider-zone"></span></p>
-            <button onclick="confirmRide()">Confirm Ride</button>
-        </div>
+            <div id="rider-details" style="display: none;">
+                <h2>Rider Details</h2>
+                <p><strong>Name:</strong> <span id="rider-name"></span></p>
+                <p><strong>Phone:</strong> <span id="rider-phone"></span></p>
+                <p><strong>Vehicle Type:</strong> <span id="rider-vehicle-type"></span></p>
+                <p><strong>Zone:</strong> <span id="rider-zone"></span></p>
+                <button onclick="confirmRide()">Confirm Ride</button>
+            </div>
 
-        <!-- Confirmed Rides Section (without the heading) -->
-        <div id="confirmed-rides"></div>
+            <!-- Confirmed Rides Section (without the heading) -->
+            <div id="confirmed-rides"></div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
