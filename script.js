@@ -20,11 +20,50 @@ function requestNotificationPermission() {
     Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
             console.log('Notification permission granted.');
+            // Get the device token
+            getDeviceToken();
         } else {
             console.log('Notification permission denied.');
         }
     }).catch(error => {
         console.error('Error requesting notification permission:', error);
+    });
+}
+
+// Function to get the device token
+function getDeviceToken() {
+    messaging.getToken({ vapidKey: 'YOUR_VAPID_KEY' }).then((currentToken) => {
+        if (currentToken) {
+            console.log('Device token:', currentToken);
+            // Send the token to the backend for registration
+            registerDeviceToken(currentToken);
+        } else {
+            console.log('No registration token available. Request permission to generate one.');
+        }
+    }).catch((err) => {
+        console.error('Error retrieving token:', err);
+    });
+}
+
+// Function to register the device token
+function registerDeviceToken(deviceToken) {
+    const riderPhone = 'RIDER_PHONE_NUMBER'; // Replace with the rider's phone number
+    fetch('http://127.0.0.1:5000/register-device-token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            riderPhone: riderPhone,
+            deviceToken: deviceToken
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Device token registered successfully:', data);
+    })
+    .catch(error => {
+        console.error('Error registering device token:', error);
     });
 }
 
@@ -252,7 +291,7 @@ function fetchConfirmedRides() {
         .then(data => {
             console.log('Confirmed Rides:', data);
             const confirmedRidesDiv = document.getElementById('confirmed-rides');
-            confirmedRidesDiv.innerHTML = '<h2>Confirmed Rides</h2>';
+            confirmedRidesDiv.innerHTML = ''; // Clear previous content
             data.forEach(ride => {
                 confirmedRidesDiv.innerHTML += `
                     <div class="ride-details">
