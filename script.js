@@ -77,6 +77,49 @@ function registerDeviceToken(deviceToken) {
     });
 }
 
+// Function to handle passenger login
+function loginPassenger() {
+    const phoneNumber = document.getElementById('login-phone').value.trim();
+
+    if (!phoneNumber) {
+        alert('Please enter your phone number.');
+        return;
+    }
+
+    // Send the phone number to the backend for verification
+    fetch('http://127.0.0.1:5000/login-passenger', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            mobileContact: phoneNumber
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Store the passenger's MobileContact in sessionStorage
+            sessionStorage.setItem('passengerPhone', phoneNumber);
+            alert('Login successful!');
+            // Hide the login section and show the main app
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+        } else {
+            alert('Login failed. Please check your phone number.');
+        }
+    })
+    .catch(error => {
+        console.error('Error during login:', error);
+        alert('An error occurred during login. Please try again.');
+    });
+}
+
 // Store locations data globally
 let locationsData = [];
 
