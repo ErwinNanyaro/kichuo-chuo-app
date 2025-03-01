@@ -15,6 +15,19 @@ if (!firebase.apps.length) {
 }
 const messaging = firebase.messaging();
 
+// Function to request notification permission
+function requestNotificationPermission() {
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            console.log('Notification permission granted.');
+        } else {
+            console.log('Notification permission denied.');
+        }
+    }).catch(error => {
+        console.error('Error requesting notification permission:', error);
+    });
+}
+
 // Store locations data globally
 let locationsData = [];
 
