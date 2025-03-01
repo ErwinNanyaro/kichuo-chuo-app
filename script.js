@@ -38,7 +38,6 @@ function getDeviceToken() {
         console.log('An error occurred while retrieving token:', err);
     });
 }
-
 // Send device token to the backend
 function sendTokenToServer(token) {
     const riderPhone = '1234567890'; // Replace with the rider's phone number
