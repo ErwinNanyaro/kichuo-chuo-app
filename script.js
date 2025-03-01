@@ -1,3 +1,14 @@
+let locationsData = []; // Store locations data globally
+
+// Fetch locations from the backend
+fetch('http://127.0.0.1:5000/locations')
+    .then(response => response.json())
+    .then(data => {
+        locationsData = data; // Store locations data
+    })
+    .catch(error => {
+        console.error('Error fetching locations:', error);
+    });
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBmv0G4dYFKkq10DA5PJvooFTNSJMnQ59g",
