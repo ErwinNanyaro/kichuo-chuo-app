@@ -57,7 +57,7 @@ function getDeviceToken() {
 
 // Function to register the device token
 function registerDeviceToken(deviceToken) {
-    const riderPhone = '754996969'; // Replace with the rider's phone number
+    const riderPhone = '628284454'; // Use John Doe's phone number
     fetch('http://192.168.1.122:5000/register-device-token', {
         method: 'POST',
         headers: {
