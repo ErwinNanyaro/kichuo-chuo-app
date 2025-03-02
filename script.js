@@ -20,8 +20,7 @@ function requestNotificationPermission() {
     Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
             console.log('Notification permission granted.');
-            // Get the device token
-            getDeviceToken();
+            getDeviceToken(); // Get the device token
         } else if (permission === 'denied') {
             console.log('Notification permission denied.');
             alert('Please enable notifications to receive ride updates.');
@@ -39,8 +38,7 @@ function getDeviceToken() {
     messaging.getToken({ vapidKey: 'BEngFTBc5Zl9kpbnusb3F9WNwtZBimR37sw2fMkzuI6et5J342u2gPULKmpyn99-it-K5k7VObyKNdqlGN1pigY' }).then((currentToken) => {
         if (currentToken) {
             console.log('Device token:', currentToken);
-            // Send the token to the backend for registration
-            registerDeviceToken(currentToken);
+            registerDeviceToken(currentToken); // Send the token to the backend
         } else {
             console.log('No registration token available. Request permission to generate one.');
             requestNotificationPermission(); // Request permission again if no token is available
@@ -57,8 +55,8 @@ function getDeviceToken() {
 
 // Function to register the device token
 function registerDeviceToken(deviceToken) {
-    const riderPhone = '255628284454'; // Use John Doe's phone number
-    fetch('http://192.168.1.122:5000/register-device-token', {
+    const riderPhone = '628284454'; // Replace with the rider's actual phone number
+    fetch('https://your-app-name.herokuapp.com/register-device-token', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -87,7 +85,7 @@ function loginPassenger() {
     }
 
     // Send the phone number to the backend for verification
-    fetch('http://192.168.1.122:5000/login-passenger', {
+    fetch('https://your-app-name.herokuapp.com/login-passenger', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -119,6 +117,19 @@ function loginPassenger() {
         alert('An error occurred during login. Please try again.');
     });
 }
+
+// Update all other fetch URLs to use the deployed backend URL
+const backendUrl = 'https://your-app-name.herokuapp.com';
+
+// Example: Fetch locations
+fetch(`${backendUrl}/locations`)
+    .then(response => response.json())
+    .then(data => {
+        locationsData = data; // Store locations data
+    })
+    .catch(error => {
+        console.error('Error fetching locations:', error);
+    });
 
 // Store locations data globally
 let locationsData = [];
