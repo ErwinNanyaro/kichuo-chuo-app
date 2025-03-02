@@ -9,70 +9,72 @@ const firebaseConfig = {
     measurementId: "G-LKVLSBTVVF"
 };
 
-// Initialize Firebase
-if (!firebase.apps.length) {
+// Initialize Firebase only if the browser supports it
+if (firebase.apps.length === 0 && firebase.messaging.isSupported()) {
     firebase.initializeApp(firebaseConfig);
-}
-const messaging = firebase.messaging();
+    const messaging = firebase.messaging();
 
-// Function to request notification permission
-function requestNotificationPermission() {
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            console.log('Notification permission granted.');
-            getDeviceToken(); // Get the device token
-        } else if (permission === 'denied') {
-            console.log('Notification permission denied.');
-            alert('Please enable notifications to receive ride updates.');
-        } else {
-            console.log('Notification permission blocked.');
-            alert('Notifications are blocked. Please enable them in your browser settings.');
-        }
-    }).catch(error => {
-        console.error('Error requesting notification permission:', error);
-    });
-}
+    // Function to request notification permission
+    function requestNotificationPermission() {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Notification permission granted.');
+                getDeviceToken(); // Get the device token
+            } else if (permission === 'denied') {
+                console.log('Notification permission denied.');
+                alert('Please enable notifications to receive ride updates.');
+            } else {
+                console.log('Notification permission blocked.');
+                alert('Notifications are blocked. Please enable them in your browser settings.');
+            }
+        }).catch(error => {
+            console.error('Error requesting notification permission:', error);
+        });
+    }
 
-// Function to get the device token
-function getDeviceToken() {
-    messaging.getToken({ vapidKey: 'BEngFTBc5Zl9kpbnusb3F9WNwtZBimR37sw2fMkzuI6et5J342u2gPULKmpyn99-it-K5k7VObyKNdqlGN1pigY' }).then((currentToken) => {
-        if (currentToken) {
-            console.log('Device token:', currentToken);
-            registerDeviceToken(currentToken); // Send the token to the backend
-        } else {
-            console.log('No registration token available. Request permission to generate one.');
-            requestNotificationPermission(); // Request permission again if no token is available
-        }
-    }).catch((err) => {
-        console.error('Error retrieving token:', err);
-        if (err.code === 'messaging/permission-blocked') {
-            alert('Notifications are blocked. Please enable them in your browser settings.');
-        } else {
+    // Function to get the device token
+    function getDeviceToken() {
+        messaging.getToken({ vapidKey: 'BEngFTBc5Zl9kpbnusb3F9WNwtZBimR37sw2fMkzuI6et5J342u2gPULKmpyn99-it-K5k7VObyKNdqlGN1pigY' }).then((currentToken) => {
+            if (currentToken) {
+                console.log('Device token:', currentToken);
+                registerDeviceToken(currentToken); // Send the token to the backend
+            } else {
+                console.log('No registration token available. Request permission to generate one.');
+                requestNotificationPermission(); // Request permission again if no token is available
+            }
+        }).catch((err) => {
             console.error('Error retrieving token:', err);
-        }
-    });
-}
+            if (err.code === 'messaging/permission-blocked') {
+                alert('Notifications are blocked. Please enable them in your browser settings.');
+            } else {
+                console.error('Error retrieving token:', err);
+            }
+        });
+    }
 
-// Function to register the device token
-function registerDeviceToken(deviceToken) {
-    const riderPhone = '628284454'; // Replace with the rider's actual phone number
-    fetch('https://your-app-name.herokuapp.com/register-device-token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            riderPhone: riderPhone,
-            deviceToken: deviceToken
+    // Function to register the device token
+    function registerDeviceToken(deviceToken) {
+        const riderPhone = '628284454'; // Replace with the rider's actual phone number
+        fetch('https://your-app-name.herokuapp.com/register-device-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                riderPhone: riderPhone,
+                deviceToken: deviceToken
+            })
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Device token registered successfully:', data);
-    })
-    .catch(error => {
-        console.error('Error registering device token:', error);
-    });
+        .then(response => response.json())
+        .then(data => {
+            console.log('Device token registered successfully:', data);
+        })
+        .catch(error => {
+            console.error('Error registering device token:', error);
+        });
+    }
+} else {
+    console.log('Firebase Messaging is not supported in this browser.');
 }
 
 // Function to handle passenger login
