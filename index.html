@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kichuo Chuo</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Firebase App (the core Firebase SDK) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <!-- Firebase Messaging (for push notifications) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
 </head>
 <body>
@@ -23,19 +22,24 @@
     <div id="main-app" style="display: none;">
         <div class="container">
             <h1>Welcome to Kichuo Chuo!</h1>
+
+            <!-- Route Input Section -->
             <div class="form-group">
                 <label for="from">From:</label>
                 <input type="text" id="from" placeholder="Type your location..." oninput="filterLocations('from')">
                 <div id="from-suggestions" class="suggestions"></div>
-                <input type="hidden" id="from-zone" value="">
+                <input type="hidden" id="from-zone">
             </div>
             <div class="form-group">
                 <label for="to">To:</label>
                 <input type="text" id="to" placeholder="Type your location..." oninput="filterLocations('to')">
                 <div id="to-suggestions" class="suggestions"></div>
             </div>
+
             <button onclick="getRoutes()">Get Routes</button>
             <div id="results"></div>
+
+            <!-- Vehicle Selection -->
             <div id="vehicle-selection" style="display: none;">
                 <h2>Choose Your Vehicle:</h2>
                 <div class="vehicle-options">
@@ -53,6 +57,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Rider Details -->
             <div id="rider-details" style="display: none;">
                 <h2>Rider Details</h2>
                 <p><strong>Name:</strong> <span id="rider-name"></span></p>
@@ -62,10 +68,12 @@
                 <button onclick="confirmRide()">Confirm Ride</button>
             </div>
 
-            <!-- Confirmed Rides Section (without the heading) -->
+            <!-- Confirmed Rides -->
             <div id="confirmed-rides"></div>
         </div>
     </div>
+
+    <!-- App Script -->
     <script src="script.js"></script>
 </body>
 </html>
