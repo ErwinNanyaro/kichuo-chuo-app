@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Kichuo Chuo</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <!-- Firebase SDKs (keep only if needed) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
 </head>
 <body>
   <div id="login-section">
@@ -69,6 +66,43 @@
       <div id="confirmed-rides"></div>
     </div>
   </div>
+
+  <script>
+    async function loginPassenger() {
+      const phoneInput = document.getElementById("login-phone").value.trim();
+
+      if (!phoneInput) {
+        alert("Please enter your phone number.");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:5000/api/verify-passenger", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ mobileContact: phoneInput }),
+        });
+
+        const result = await response.json();
+
+        if (result.exists) {
+          alert(`✅ Welcome ${result.firstName} ${result.lastName} (${result.userType})!`);
+          document.getElementById("login-section").style.display = "none";
+          document.getElementById("main-app").style.display = "block";
+        } else {
+          const register = confirm("📵 Phone number not found. Do you want to register?");
+          if (register) {
+            window.location.href = "/register.html";
+          }
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        alert("⚠️ Failed to connect to the server.");
+      }
+    }
+  </script>
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
