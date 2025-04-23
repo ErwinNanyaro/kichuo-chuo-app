@@ -1,79 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kichuo Chuo</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kichuo Chuo</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- Firebase SDKs (keep only if needed) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
 </head>
 <body>
-    <div id="login-section">
-        <h2>Passenger Login</h2>
-        <div class="form-group">
-            <label for="login-phone">Phone Number:</label>
-            <input type="text" id="login-phone" placeholder="Enter your phone number">
-        </div>
-        <button onclick="loginPassenger()">Login</button>
+  <div id="login-section">
+    <h2>Passenger Login</h2>
+    <div class="form-group">
+      <label for="login-phone">Phone Number:</label>
+      <input type="text" id="login-phone" placeholder="Enter your phone number">
     </div>
+    <button onclick="loginPassenger()">Login</button>
+  </div>
 
-    <div id="main-app" style="display: none;">
-        <div class="container">
-            <h1>Welcome to Kichuo Chuo!</h1>
+  <div id="main-app" style="display: none;">
+    <div class="container">
+      <h1>Welcome to Kichuo Chuo!</h1>
 
-            <!-- Route Input Section -->
-            <div class="form-group">
-                <label for="from">From:</label>
-                <input type="text" id="from" placeholder="Type your location..." oninput="filterLocations('from')">
-                <div id="from-suggestions" class="suggestions"></div>
-                <input type="hidden" id="from-zone">
-            </div>
-            <div class="form-group">
-                <label for="to">To:</label>
-                <input type="text" id="to" placeholder="Type your location..." oninput="filterLocations('to')">
-                <div id="to-suggestions" class="suggestions"></div>
-            </div>
+      <div class="form-group">
+        <label for="from">From:</label>
+        <input type="text" id="from" placeholder="Type your location...">
+        <div id="from-suggestions" class="suggestions"></div>
+        <input type="hidden" id="from-zone">
+      </div>
 
-            <button onclick="getRoutes()">Get Routes</button>
-            <div id="results"></div>
+      <div class="form-group">
+        <label for="to">To:</label>
+        <input type="text" id="to" placeholder="Type your location...">
+        <div id="to-suggestions" class="suggestions"></div>
+      </div>
 
-            <!-- Vehicle Selection -->
-            <div id="vehicle-selection" style="display: none;">
-                <h2>Choose Your Vehicle:</h2>
-                <div class="vehicle-options">
-                    <div class="vehicle-card" data-vehicle="Motorcycle">
-                        <img src="motorbike.png" alt="Motorcycle">
-                        <p>Motorcycle: <span class="price"></span> TZS</p>
-                    </div>
-                    <div class="vehicle-card" data-vehicle="Bajaji">
-                        <img src="tuktuk.png" alt="Bajaji">
-                        <p>Bajaji: <span class="price"></span> TZS</p>
-                    </div>
-                    <div class="vehicle-card" data-vehicle="Car">
-                        <img src="taxi.png" alt="Car">
-                        <p>Car: <span class="price"></span> TZS</p>
-                    </div>
-                </div>
-            </div>
+      <button onclick="getRoutes()">Get Routes</button>
+      <div id="results"></div>
 
-            <!-- Rider Details -->
-            <div id="rider-details" style="display: none;">
-                <h2>Rider Details</h2>
-                <p><strong>Name:</strong> <span id="rider-name"></span></p>
-                <p><strong>Phone:</strong> <span id="rider-phone"></span></p>
-                <p><strong>Vehicle Type:</strong> <span id="rider-vehicle-type"></span></p>
-                <p><strong>Zone:</strong> <span id="rider-zone"></span></p>
-                <button onclick="confirmRide()">Confirm Ride</button>
-            </div>
-
-            <!-- Confirmed Rides -->
-            <div id="confirmed-rides"></div>
+      <div id="vehicle-selection" style="display: none;">
+        <h2>Choose Your Vehicle:</h2>
+        <div class="vehicle-options">
+          <div class="vehicle-card" data-vehicle="Motorcycle">
+            <img src="motorbike.png" alt="Motorcycle">
+            <p>Motorcycle: <span class="price"></span> TZS</p>
+          </div>
+          <div class="vehicle-card" data-vehicle="Bajaji">
+            <img src="tuktuk.png" alt="Bajaji">
+            <p>Bajaji: <span class="price"></span> TZS</p>
+          </div>
+          <div class="vehicle-card" data-vehicle="Car">
+            <img src="taxi.png" alt="Car">
+            <p>Car: <span class="price"></span> TZS</p>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- App Script -->
-    <script src="script.js"></script>
+      <div id="rider-details" style="display: none;">
+        <h2>Rider Details</h2>
+        <p><strong>Name:</strong> <span id="rider-name"></span></p>
+        <p><strong>Phone:</strong> <span id="rider-phone"></span></p>
+        <p><strong>Vehicle Type:</strong> <span id="rider-vehicle-type"></span></p>
+        <p><strong>Zone:</strong> <span id="rider-zone"></span></p>
+        <button onclick="confirmRide()">Confirm Ride</button>
+      </div>
+
+      <div id="confirmed-rides"></div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
