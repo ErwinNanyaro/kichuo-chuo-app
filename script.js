@@ -16,7 +16,6 @@ function loadLocationsFromFirebase() {
         });
 }
 
-// Setup autocomplete inputs for location search
 function setupAutocomplete(locations) {
     const fromInput = document.getElementById('from');
     const toInput = document.getElementById('to');
@@ -29,7 +28,6 @@ function setupAutocomplete(locations) {
     );
 }
 
-// Filter and show location suggestions
 function filterLocationSuggestions(inputElement, suggestionId, locations, zoneId) {
     const inputValue = inputElement.value.toLowerCase();
     const suggestionsContainer = document.getElementById(suggestionId);
@@ -56,7 +54,6 @@ function filterLocationSuggestions(inputElement, suggestionId, locations, zoneId
     });
 }
 
-// Fetch zone for selected location
 function fetchZoneForLocation(locationName, zoneElementId) {
     fetch('http://192.168.1.122:5000/get_zone', {
         method: 'POST',
@@ -73,7 +70,6 @@ function fetchZoneForLocation(locationName, zoneElementId) {
         });
 }
 
-// Get route information from backend
 function getRoutes() {
     const from = document.getElementById('from').value;
     const to = document.getElementById('to').value;
@@ -101,7 +97,6 @@ function getRoutes() {
         });
 }
 
-// Display prices and vehicle options for selected route
 function displayRoutePrices(routes) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = '';
@@ -121,7 +116,6 @@ function displayRoutePrices(routes) {
     });
 }
 
-// Highlight selected vehicle
 function selectVehicle(vehicleType) {
     document.getElementById('selected-vehicle').value = vehicleType;
 
@@ -133,7 +127,6 @@ function selectVehicle(vehicleType) {
     if (selected) selected.classList.add('selected');
 }
 
-// Confirm and display booking
 function confirmBooking() {
     const from = document.getElementById('from').value;
     const to = document.getElementById('to').value;
@@ -147,18 +140,32 @@ function confirmBooking() {
     alert(`✅ Booking confirmed from ${from} to ${to} using ${vehicle}.`);
 }
 
-// Login user using Firebase Auth
-function loginUser() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+// ✅ NEW: Login Passenger using phone number
+function loginPassenger() {
+    const phone = document.getElementById('login-phone').value.trim();
 
-    firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(cred => {
-            console.log('Logged in as:', cred.user.email);
-            window.location.href = 'home.html';
+    if (!phone) {
+        alert('Please enter your phone number.');
+        return;
+    }
+
+    fetch('http://192.168.1.122:5000/verify_passenger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.exists) {
+                alert(`Welcome back, ${data.name || 'Passenger'}!`);
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+            } else {
+                alert('Phone number not found. Please try again or register.');
+            }
         })
         .catch(err => {
-            console.error('Login error:', err.message);
-            alert('Login failed. Check your credentials.');
+            console.error('Login error:', err);
+            alert('Something went wrong. Please try again later.');
         });
 }
