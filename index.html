@@ -464,7 +464,7 @@
     </div>
   </div>
 
-  <!-- External JavaScript file -->
-  <script src="app.js"></script>
+  <!-- External JavaScript file with Flask static reference -->
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
