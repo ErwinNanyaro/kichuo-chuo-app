@@ -1,6 +1,6 @@
 // Configuration
 const config = {
-  backendUrl: 'http://localhost:5000',
+  backendUrl: window.location.origin,
   defaultAvatarBgColors: ['#3a86ff', '#8338ec', '#06d6a0', '#ef476f', '#ffd166'],
   firebaseConfig: {
     apiKey: "AIzaSyBmv0G4dYFKkq10DA5PJvooFTNSJMnQ59g",
@@ -17,12 +17,26 @@ if (!firebase.apps.length) {
   firebase.initializeApp(config.firebaseConfig);
 }
 
-// DOM Elements and State
+// DOM Elements
 const elements = {
+  // Auth elements
   authSection: document.getElementById('auth-section'),
-  appContainer: document.getElementById('app-container'),
+  authTabs: document.querySelectorAll('.auth-tab'),
   loginForm: document.getElementById('login-form'),
-  loginPhoneInput: document.getElementById('login-phone'),
+  loginEmail: document.getElementById('login-email'),
+  loginPassword: document.getElementById('login-password'),
+  signupForm: document.getElementById('signup-form'),
+  signupFirstName: document.getElementById('signup-firstname'),
+  signupLastName: document.getElementById('signup-lastname'),
+  signupEmail: document.getElementById('signup-email'),
+  signupPhone: document.getElementById('signup-phone'),
+  signupPassword: document.getElementById('signup-password'),
+  signupConfirmPassword: document.getElementById('signup-confirm-password'),
+  userTypeOptions: document.querySelectorAll('.user-type-option'),
+  userTypeInput: document.getElementById('user-type'),
+  
+  // App elements
+  appContainer: document.getElementById('app-container'),
   userAvatar: document.getElementById('user-avatar'),
   userName: document.getElementById('user-name'),
   fromInput: document.getElementById('from'),
@@ -44,28 +58,28 @@ const elements = {
   confirmRideBtn: document.getElementById('confirm-ride-btn'),
   rideConfirmation: document.getElementById('ride-confirmation'),
   confirmationDetails: document.getElementById('confirmation-details'),
-  trackRideBtn: document.getElementById('track-ride-btn'),
-  trackingSection: document.getElementById('tracking-section'),
-  trackingEta: document.getElementById('tracking-eta'),
-  trackingDistance: document.getElementById('tracking-distance')
+  trackRideBtn: document.getElementById('track-ride-btn')
 };
 
+// Application State
 let state = {
   currentUser: null,
+  routes: [],
+  riders: [],
   selectedVehicle: null,
   selectedRider: null,
   currentRide: null,
-  trackingInterval: null,
-  routes: []
+  trackingInterval: null
 };
 
-// Initialize
+// Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthState();
   setupEventListeners();
   loadRoutes();
 });
 
+// Check if user is already authenticated
 function checkAuthState() {
   const userData = localStorage.getItem('user');
   if (userData) {
@@ -74,43 +88,43 @@ function checkAuthState() {
   }
 }
 
-async function loadRoutes() {
-  try {
-    const response = await fetch(`${config.backendUrl}/api/routes`);
-    if (response.ok) {
-      state.routes = await response.json();
-      console.log('Routes loaded:', state.routes);
-    }
-  } catch (error) {
-    console.error('Error loading routes:', error);
-    showNotification('Failed to load routes. Please refresh the page.', 'error');
-  }
-}
-
-function showApp() {
-  console.log('Showing app for user:', state.currentUser);
-  elements.authSection.classList.add('hidden');
-  elements.appContainer.classList.remove('hidden');
-  
-  if (state.currentUser) {
-    const initials = state.currentUser.firstName.charAt(0) + state.currentUser.lastName.charAt(0);
-    elements.userAvatar.textContent = initials;
-    elements.userName.textContent = `${state.currentUser.firstName} ${state.currentUser.lastName}`;
-    setRandomAvatarBg(elements.userAvatar);
-  }
-}
-
+// Set up all event listeners
 function setupEventListeners() {
+  // Auth tab switching
+  elements.authTabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      const tabType = e.target.getAttribute('onclick').match(/'(\w+)'/)[1];
+      switchAuthTab(tabType);
+    });
+  });
+
+  // Login form
   if (elements.loginForm) {
     elements.loginForm.addEventListener('submit', handleLogin);
   }
 
+  // Signup form
+  if (elements.signupForm) {
+    elements.signupForm.addEventListener('submit', handleSignup);
+  }
+
+  // User type selection
+  elements.userTypeOptions.forEach(option => {
+    option.addEventListener('click', function() {
+      selectUserType(this);
+    });
+  });
+
+  // Location inputs
   elements.fromInput.addEventListener('input', () => handleLocationInput('from'));
   elements.toInput.addEventListener('input', () => handleLocationInput('to'));
+
+  // Ride buttons
   elements.findRideBtn.addEventListener('click', findRides);
   elements.confirmRideBtn.addEventListener('click', confirmRide);
   elements.trackRideBtn.addEventListener('click', startRideTracking);
 
+  // Close suggestions when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.location-input')) {
       elements.fromSuggestions.style.display = 'none';
@@ -119,24 +133,52 @@ function setupEventListeners() {
   });
 }
 
+// Switch between login and signup tabs
+function switchAuthTab(tabType) {
+  elements.authTabs.forEach(tab => {
+    if (tab.getAttribute('onclick').includes(tabType)) {
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
+
+  if (tabType === 'login') {
+    elements.loginForm.style.display = 'block';
+    elements.signupForm.style.display = 'none';
+  } else {
+    elements.loginForm.style.display = 'none';
+    elements.signupForm.style.display = 'block';
+  }
+}
+
+// Select user type in signup form
+function selectUserType(element) {
+  elements.userTypeOptions.forEach(opt => opt.classList.remove('selected'));
+  element.classList.add('selected');
+  elements.userTypeInput.value = element.dataset.type;
+}
+
+// Handle login form submission
 async function handleLogin(e) {
   e.preventDefault();
-  const phone = elements.loginPhoneInput.value.trim();
+  const email = elements.loginEmail.value.trim();
+  const password = elements.loginPassword.value.trim();
 
-  if (!phone) {
-    showNotification('Please enter your phone number', 'error');
+  if (!email || !password) {
+    showNotification('Please enter both email and password', 'error');
     return;
   }
 
   try {
-    showLoader(elements.loginForm.querySelector('button'), 'Continuing...');
+    showLoader(elements.loginForm.querySelector('button'), 'Logging in...');
 
-    const response = await fetch(`${config.backendUrl}/api/login-passenger`, {
+    const response = await fetch(`${config.backendUrl}/api/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ mobileContact: phone }),
+      body: JSON.stringify({ email, password }),
     });
 
     const data = await response.json();
@@ -157,6 +199,97 @@ async function handleLogin(e) {
   }
 }
 
+// Handle signup form submission
+async function handleSignup(e) {
+  e.preventDefault();
+  const firstName = elements.signupFirstName.value.trim();
+  const lastName = elements.signupLastName.value.trim();
+  const email = elements.signupEmail.value.trim();
+  const phone = elements.signupPhone.value.trim();
+  const password = elements.signupPassword.value.trim();
+  const confirmPassword = elements.signupConfirmPassword.value.trim();
+  const userType = elements.userTypeInput.value;
+
+  // Validation
+  if (!firstName || !lastName || !email || !phone || !password || !confirmPassword || !userType) {
+    showNotification('Please fill all fields', 'error');
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showNotification('Passwords do not match', 'error');
+    return;
+  }
+
+  if (password.length < 6) {
+    showNotification('Password must be at least 6 characters', 'error');
+    return;
+  }
+
+  try {
+    showLoader(elements.signupForm.querySelector('button'), 'Registering...');
+
+    const response = await fetch(`${config.backendUrl}/api/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        userType
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      state.currentUser = data.user;
+      localStorage.setItem('user', JSON.stringify(data.user));
+      showApp();
+      showNotification(`Welcome to Kichuo Chuo, ${data.user.firstName}!`, 'success');
+    } else {
+      showNotification(data.message || 'Registration failed. Please try again.', 'error');
+    }
+  } catch (error) {
+    console.error('Signup error:', error);
+    showNotification('An error occurred during registration. Please try again.', 'error');
+  } finally {
+    hideLoader(elements.signupForm.querySelector('button'), 'Create Account');
+  }
+}
+
+// Load routes from backend
+async function loadRoutes() {
+  try {
+    const response = await fetch(`${config.backendUrl}/api/routes`);
+    if (response.ok) {
+      state.routes = await response.json();
+      console.log('Routes loaded:', state.routes);
+    }
+  } catch (error) {
+    console.error('Error loading routes:', error);
+    showNotification('Failed to load routes. Please refresh the page.', 'error');
+  }
+}
+
+// Show main application
+function showApp() {
+  elements.authSection.classList.add('hidden');
+  elements.appContainer.classList.remove('hidden');
+  
+  if (state.currentUser) {
+    const initials = state.currentUser.firstName.charAt(0) + state.currentUser.lastName.charAt(0);
+    elements.userAvatar.textContent = initials;
+    elements.userName.textContent = `${state.currentUser.firstName} ${state.currentUser.lastName}`;
+    setRandomAvatarBg(elements.userAvatar);
+  }
+}
+
+// Handle location input and suggestions
 function handleLocationInput(type) {
   const inputElement = type === 'from' ? elements.fromInput : elements.toInput;
   const suggestionsContainer = type === 'from' ? elements.fromSuggestions : elements.toSuggestions;
@@ -167,18 +300,23 @@ function handleLocationInput(type) {
 
   if (inputValue.length < 2) return;
 
-  const filtered = state.routes.filter(route => 
-    route[type === 'from' ? 'from' : 'to'].toLowerCase().includes(inputValue)
-  );
+  const filtered = state.routes.filter(route => {
+    const location = type === 'from' ? route.FromLocationName : route.ToLocationName;
+    return location.toLowerCase().includes(inputValue);
+  });
 
   if (filtered.length > 0) {
     filtered.forEach(route => {
-      const location = route[type === 'from' ? 'from' : 'to'];
+      const location = type === 'from' ? route.FromLocationName : route.ToLocationName;
       const suggestion = document.createElement('div');
       suggestion.className = 'suggestion-item';
       suggestion.textContent = location;
       suggestion.onclick = () => {
         inputElement.value = location;
+        if (type === 'from') {
+          // Store zone for 'from' location
+          document.getElementById('from-zone').value = route.Zone;
+        }
         suggestionsContainer.innerHTML = '';
         suggestionsContainer.style.display = 'none';
       };
@@ -188,6 +326,7 @@ function handleLocationInput(type) {
   }
 }
 
+// Find available rides
 async function findRides() {
   const from = elements.fromInput.value;
   const to = elements.toInput.value;
@@ -201,7 +340,10 @@ async function findRides() {
     showLoader(elements.findRideBtn, 'Finding rides...');
 
     // Find matching route
-    const route = state.routes.find(r => r.from === from && r.to === to);
+    const route = state.routes.find(r => 
+      r.FromLocationName === from && r.ToLocationName === to
+    );
+    
     if (!route) {
       showNotification('No rides available for this route', 'info');
       return;
@@ -212,25 +354,25 @@ async function findRides() {
       {
         id: 1,
         vehicleType: "Motorcycle",
-        price: route.prices.Motorcycle,
+        price: route.MotorcyclePrice,
         time: "10 min",
-        image: "assets/motorbike.png",
+        image: "{{ url_for('static', filename='images/motorbike.png') }}",
         description: "Fast and affordable"
       },
       {
         id: 2,
         vehicleType: "Bajaji",
-        price: route.prices.Bajaji,
+        price: route.BajajiPrice,
         time: "15 min",
-        image: "assets/tuktuk.png",
+        image: "{{ url_for('static', filename='images/tuktuk.png') }}",
         description: "Covered and comfortable"
       },
       {
         id: 3,
         vehicleType: "Car",
-        price: route.prices.Car,
+        price: route.CarPrice,
         time: "12 min",
-        image: "assets/taxi.png",
+        image: "{{ url_for('static', filename='images/taxi.png') }}",
         description: "Private and comfortable"
       }
     ];
@@ -244,10 +386,13 @@ async function findRides() {
   }
 }
 
+// Display available ride options
 function displayRideOptions(rides) {
   elements.vehicleOptions.innerHTML = '';
   
   rides.forEach(ride => {
+    if (!ride.price || ride.price <= 0) return; // Skip unavailable options
+    
     const card = document.createElement('div');
     card.className = 'vehicle-card fade-in';
     card.dataset.vehicle = ride.vehicleType;
@@ -269,49 +414,66 @@ function displayRideOptions(rides) {
   elements.rideResults.scrollIntoView({ behavior: 'smooth' });
 }
 
-function selectRideOption(ride) {
+// Select a ride option and find available riders
+async function selectRideOption(ride) {
   state.selectedVehicle = ride;
   
-  // Remove selected class from all cards
+  // Update UI
   document.querySelectorAll('.vehicle-card').forEach(card => {
     card.classList.remove('selected');
   });
-  
-  // Add selected class to clicked card
   event.currentTarget.classList.add('selected');
   
-  // Mock rider details (in a real app, this would come from your backend)
-  const mockRider = {
-    id: 101,
-    name: "John Doe",
-    phone: "0712345678",
-    rating: "4.9",
-    rides: "120",
-    vehicle: ride.vehicleType,
-    from: elements.fromInput.value,
-    to: elements.toInput.value,
-    price: ride.price,
-    time: ride.time,
-    vehicleImage: ride.image
-  };
-  
-  displayRiderDetails(mockRider);
+  try {
+    showLoader(elements.findRideBtn, 'Finding riders...');
+    
+    // Get zone from 'from' location
+    const zone = document.getElementById('from-zone').value;
+    if (!zone) {
+      showNotification('Could not determine zone for pickup location', 'error');
+      return;
+    }
+    
+    // Fetch available riders
+    const response = await fetch(
+      `${config.backendUrl}/api/riders?vehicleType=${ride.vehicleType}&zone=${zone}`
+    );
+    
+    if (!response.ok) throw new Error('Failed to fetch riders');
+    
+    const riders = await response.json();
+    if (riders.length === 0) {
+      showNotification('No riders available for selected vehicle type', 'info');
+      return;
+    }
+    
+    // Select a random rider (in real app, you might have a matching algorithm)
+    const rider = riders[Math.floor(Math.random() * riders.length)];
+    displayRiderDetails(rider, ride);
+    
+  } catch (error) {
+    console.error('Error finding riders:', error);
+    showNotification('Failed to find riders. Please try again.', 'error');
+  } finally {
+    hideLoader(elements.findRideBtn, 'Find Rides');
+  }
 }
 
-function displayRiderDetails(rider) {
+// Display rider details
+function displayRiderDetails(rider, ride) {
   state.selectedRider = rider;
   
   // Set rider details
-  elements.riderName.textContent = rider.name;
-  elements.riderPhone.textContent = rider.phone;
-  elements.rideVehicle.textContent = rider.vehicle;
-  elements.rideFrom.textContent = rider.from;
-  elements.rideTo.textContent = rider.to;
-  elements.rideTime.textContent = rider.time;
-  elements.ridePrice.textContent = `${rider.price} TZS`;
+  elements.riderName.textContent = rider.Name;
+  elements.riderPhone.textContent = rider.Phone;
+  elements.rideVehicle.textContent = ride.vehicleType;
+  elements.rideFrom.textContent = elements.fromInput.value;
+  elements.rideTo.textContent = elements.toInput.value;
+  elements.rideTime.textContent = ride.time;
+  elements.ridePrice.textContent = `${ride.price} TZS`;
   
   // Set rider avatar
-  const initials = rider.name.split(' ').map(n => n.charAt(0)).join('');
+  const initials = rider.Name.split(' ').map(n => n.charAt(0)).join('');
   elements.riderAvatar.textContent = initials;
   setRandomAvatarBg(elements.riderAvatar);
   
@@ -319,8 +481,9 @@ function displayRiderDetails(rider) {
   elements.riderDetails.scrollIntoView({ behavior: 'smooth' });
 }
 
+// Confirm ride with selected rider
 async function confirmRide() {
-  if (!state.selectedRider || !state.currentUser) {
+  if (!state.selectedRider || !state.currentUser || !state.selectedVehicle) {
     showNotification('Please select a ride option first', 'error');
     return;
   }
@@ -329,25 +492,18 @@ async function confirmRide() {
     showLoader(elements.confirmRideBtn, 'Confirming...');
 
     const rideData = {
-      rideId: Math.floor(Math.random() * 10000),
       passengerId: state.currentUser.id,
       passengerName: `${state.currentUser.firstName} ${state.currentUser.lastName}`,
-      passengerPhone: state.currentUser.mobileContact,
-      passengerFirstName: state.currentUser.firstName,
-      passengerLastName: state.currentUser.lastName,
-      riderId: state.selectedRider.id,
-      riderName: state.selectedRider.name,
-      riderPhone: state.selectedRider.phone,
-      vehicleType: state.selectedRider.vehicle,
-      from: state.selectedRider.from,
-      to: state.selectedRider.to,
-      price: state.selectedRider.price,
-      time: state.selectedRider.time,
-      status: 'confirmed',
-      timestamp: new Date().toISOString()
+      passengerEmail: state.currentUser.email,
+      passengerPhone: state.currentUser.phone,
+      riderId: state.selectedRider.RiderID,
+      riderName: state.selectedRider.Name,
+      riderPhone: state.selectedRider.Phone,
+      vehicleType: state.selectedVehicle.vehicleType,
+      fromLocation: elements.fromInput.value,
+      toLocation: elements.toInput.value
     };
 
-    // Send confirmation to backend
     const response = await fetch(`${config.backendUrl}/api/confirm-ride`, {
       method: 'POST',
       headers: {
@@ -356,27 +512,29 @@ async function confirmRide() {
       body: JSON.stringify(rideData)
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to confirm ride');
-    }
+    const data = await response.json();
 
-    state.currentRide = rideData;
-    showRideConfirmation(rideData);
-    
-    // Save ride to local storage
-    const rides = JSON.parse(localStorage.getItem('rides') || [];
-    rides.push(rideData);
-    localStorage.setItem('rides', JSON.stringify(rides));
-    
-    showNotification('Your ride has been confirmed!', 'success');
+    if (data.success) {
+      state.currentRide = {
+        ...rideData,
+        rideId: data.rideId,
+        price: data.price,
+        commission: data.commission,
+        netAmount: data.netAmount
+      };
+      showRideConfirmation(state.currentRide);
+    } else {
+      throw new Error(data.message || 'Failed to confirm ride');
+    }
   } catch (error) {
     console.error('Error confirming ride:', error);
-    showNotification('Failed to confirm ride. Please try again.', 'error');
+    showNotification(error.message || 'Failed to confirm ride. Please try again.', 'error');
   } finally {
     hideLoader(elements.confirmRideBtn, 'Confirm Ride');
   }
 }
 
+// Show ride confirmation details
 function showRideConfirmation(ride) {
   elements.riderDetails.classList.add('hidden');
   elements.rideConfirmation.classList.remove('hidden');
@@ -393,11 +551,11 @@ function showRideConfirmation(ride) {
       </div>
       <div class="ride-summary-item">
         <span class="label">From:</span>
-        <span class="value">${ride.from}</span>
+        <span class="value">${ride.fromLocation}</span>
       </div>
       <div class="ride-summary-item">
         <span class="label">To:</span>
-        <span class="value">${ride.to}</span>
+        <span class="value">${ride.toLocation}</span>
       </div>
       <div class="ride-summary-item">
         <span class="label">Price:</span>
@@ -409,12 +567,13 @@ function showRideConfirmation(ride) {
   elements.rideConfirmation.scrollIntoView({ behavior: 'smooth' });
 }
 
+// Start ride tracking simulation
 function startRideTracking() {
+  let eta = 5; // minutes
+  
+  // Update UI
   elements.rideConfirmation.classList.add('hidden');
   elements.trackingSection.classList.remove('hidden');
-  
-  // Simulate ride tracking
-  let eta = 5; // minutes
   updateTrackingDisplay(eta);
   
   // Clear any existing interval
@@ -422,27 +581,34 @@ function startRideTracking() {
     clearInterval(state.trackingInterval);
   }
   
+  // Simulate ride progress
   state.trackingInterval = setInterval(() => {
     eta -= 1;
     if (eta <= 0) {
       clearInterval(state.trackingInterval);
       showNotification('Your rider has arrived!', 'success');
       updateTrackingDisplay(0);
-      elements.trackRideBtn.textContent = 'Ride Completed';
-      elements.trackRideBtn.classList.add('btn-success');
-      elements.trackRideBtn.removeEventListener('click', startRideTracking);
-      elements.trackRideBtn.addEventListener('click', () => {
-        showNotification('Thank you for using Kichuo Chuo!', 'info');
-      });
+      completeRide();
       return;
     }
     updateTrackingDisplay(eta);
   }, 60000); // Update every minute
 }
 
+// Update tracking display
 function updateTrackingDisplay(eta) {
   elements.trackingEta.textContent = eta > 0 ? `${eta} min` : 'Arrived';
   elements.trackingDistance.textContent = eta > 0 ? `${eta * 0.8} km` : '0 km';
+}
+
+// Complete the ride
+function completeRide() {
+  elements.trackRideBtn.textContent = 'Ride Completed';
+  elements.trackRideBtn.classList.add('btn-success');
+  elements.trackRideBtn.removeEventListener('click', startRideTracking);
+  elements.trackRideBtn.addEventListener('click', () => {
+    showNotification('Thank you for using Kichuo Chuo!', 'info');
+  });
 }
 
 // Utility functions
