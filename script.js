@@ -17,100 +17,111 @@ if (!firebase.apps.length) {
   firebase.initializeApp(config.firebaseConfig);
 }
 
-// DOM Elements
-const authSection = document.getElementById('auth-section');
-const appContainer = document.getElementById('app-container');
-const loginForm = document.getElementById('login-form');
-const loginPhoneInput = document.getElementById('login-phone');
-const userAvatar = document.getElementById('user-avatar');
-const userName = document.getElementById('user-name');
-const fromInput = document.getElementById('from');
-const toInput = document.getElementById('to');
-const fromSuggestions = document.getElementById('from-suggestions');
-const toSuggestions = document.getElementById('to-suggestions');
-const findRideBtn = document.getElementById('find-ride-btn');
-const rideResults = document.getElementById('ride-results');
-const vehicleOptions = document.getElementById('vehicle-options');
-const riderDetails = document.getElementById('rider-details');
-const riderAvatar = document.getElementById('rider-avatar');
-const riderName = document.getElementById('rider-name');
-const riderPhone = document.getElementById('rider-phone');
-const rideVehicle = document.getElementById('ride-vehicle');
-const rideFrom = document.getElementById('ride-from');
-const rideTo = document.getElementById('ride-to');
-const rideTime = document.getElementById('ride-time');
-const ridePrice = document.getElementById('ride-price');
-const confirmRideBtn = document.getElementById('confirm-ride-btn');
-const rideConfirmation = document.getElementById('ride-confirmation');
-const confirmationDetails = document.getElementById('confirmation-details');
-const trackRideBtn = document.getElementById('track-ride-btn');
-const trackingSection = document.getElementById('tracking-section');
+// DOM Elements and State
+const elements = {
+  authSection: document.getElementById('auth-section'),
+  appContainer: document.getElementById('app-container'),
+  loginForm: document.getElementById('login-form'),
+  loginPhoneInput: document.getElementById('login-phone'),
+  userAvatar: document.getElementById('user-avatar'),
+  userName: document.getElementById('user-name'),
+  fromInput: document.getElementById('from'),
+  toInput: document.getElementById('to'),
+  fromSuggestions: document.getElementById('from-suggestions'),
+  toSuggestions: document.getElementById('to-suggestions'),
+  findRideBtn: document.getElementById('find-ride-btn'),
+  rideResults: document.getElementById('ride-results'),
+  vehicleOptions: document.getElementById('vehicle-options'),
+  riderDetails: document.getElementById('rider-details'),
+  riderAvatar: document.getElementById('rider-avatar'),
+  riderName: document.getElementById('rider-name'),
+  riderPhone: document.getElementById('rider-phone'),
+  rideVehicle: document.getElementById('ride-vehicle'),
+  rideFrom: document.getElementById('ride-from'),
+  rideTo: document.getElementById('ride-to'),
+  rideTime: document.getElementById('ride-time'),
+  ridePrice: document.getElementById('ride-price'),
+  confirmRideBtn: document.getElementById('confirm-ride-btn'),
+  rideConfirmation: document.getElementById('ride-confirmation'),
+  confirmationDetails: document.getElementById('confirmation-details'),
+  trackRideBtn: document.getElementById('track-ride-btn'),
+  trackingSection: document.getElementById('tracking-section'),
+  trackingEta: document.getElementById('tracking-eta'),
+  trackingDistance: document.getElementById('tracking-distance')
+};
 
-// State
-let currentUser = null;
-let selectedVehicle = null;
-let selectedRider = null;
-let currentRide = null;
-let trackingInterval = null;
+let state = {
+  currentUser: null,
+  selectedVehicle: null,
+  selectedRider: null,
+  currentRide: null,
+  trackingInterval: null,
+  routes: []
+};
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthState();
   setupEventListeners();
+  loadRoutes();
 });
 
 function checkAuthState() {
   const userData = localStorage.getItem('user');
   if (userData) {
-    currentUser = JSON.parse(userData);
+    state.currentUser = JSON.parse(userData);
     showApp();
   }
 }
 
+async function loadRoutes() {
+  try {
+    const response = await fetch(`${config.backendUrl}/api/routes`);
+    if (response.ok) {
+      state.routes = await response.json();
+      console.log('Routes loaded:', state.routes);
+    }
+  } catch (error) {
+    console.error('Error loading routes:', error);
+    showNotification('Failed to load routes. Please refresh the page.', 'error');
+  }
+}
+
 function showApp() {
-  authSection.classList.add('hidden');
-  appContainer.classList.remove('hidden');
+  console.log('Showing app for user:', state.currentUser);
+  elements.authSection.classList.add('hidden');
+  elements.appContainer.classList.remove('hidden');
   
-  // Set user info
-  if (currentUser) {
-    const initials = currentUser.firstName.charAt(0) + currentUser.lastName.charAt(0);
-    userAvatar.textContent = initials;
-    userName.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-    setRandomAvatarBg(userAvatar);
+  if (state.currentUser) {
+    const initials = state.currentUser.firstName.charAt(0) + state.currentUser.lastName.charAt(0);
+    elements.userAvatar.textContent = initials;
+    elements.userName.textContent = `${state.currentUser.firstName} ${state.currentUser.lastName}`;
+    setRandomAvatarBg(elements.userAvatar);
   }
 }
 
 function setupEventListeners() {
-  // Login form
-  if (loginForm) {
-    loginForm.addEventListener('submit', handleLogin);
+  if (elements.loginForm) {
+    elements.loginForm.addEventListener('submit', handleLogin);
   }
 
-  // Location inputs
-  fromInput.addEventListener('input', () => handleLocationInput(fromInput, fromSuggestions, 'from-zone'));
-  toInput.addEventListener('input', () => handleLocationInput(toInput, toSuggestions, 'to-zone'));
+  elements.fromInput.addEventListener('input', () => handleLocationInput('from'));
+  elements.toInput.addEventListener('input', () => handleLocationInput('to'));
+  elements.findRideBtn.addEventListener('click', findRides);
+  elements.confirmRideBtn.addEventListener('click', confirmRide);
+  elements.trackRideBtn.addEventListener('click', startRideTracking);
 
-  // Find ride button
-  findRideBtn.addEventListener('click', findRides);
-
-  // Confirm ride button
-  confirmRideBtn.addEventListener('click', confirmRide);
-
-  // Track ride button
-  trackRideBtn.addEventListener('click', startRideTracking);
-
-  // Close suggestions when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.location-input')) {
-      fromSuggestions.style.display = 'none';
-      toSuggestions.style.display = 'none';
+      elements.fromSuggestions.style.display = 'none';
+      elements.toSuggestions.style.display = 'none';
     }
   });
 }
 
 async function handleLogin(e) {
   e.preventDefault();
-  const phone = loginPhoneInput.value.trim();
+  const phone = elements.loginPhoneInput.value.trim();
 
   if (!phone) {
     showNotification('Please enter your phone number', 'error');
@@ -118,7 +129,7 @@ async function handleLogin(e) {
   }
 
   try {
-    showLoader(loginForm.querySelector('button'), 'Continuing...');
+    showLoader(elements.loginForm.querySelector('button'), 'Continuing...');
 
     const response = await fetch(`${config.backendUrl}/api/login-passenger`, {
       method: 'POST',
@@ -131,7 +142,7 @@ async function handleLogin(e) {
     const data = await response.json();
 
     if (data.success) {
-      currentUser = data.user;
+      state.currentUser = data.user;
       localStorage.setItem('user', JSON.stringify(data.user));
       showApp();
       showNotification(`Welcome back, ${data.user.firstName}!`, 'success');
@@ -142,54 +153,44 @@ async function handleLogin(e) {
     console.error('Login error:', error);
     showNotification('An error occurred during login. Please try again.', 'error');
   } finally {
-    hideLoader(loginForm.querySelector('button'), 'Continue');
+    hideLoader(elements.loginForm.querySelector('button'), 'Continue');
   }
 }
 
-function handleLocationInput(inputElement, suggestionsContainer, zoneElementId) {
+function handleLocationInput(type) {
+  const inputElement = type === 'from' ? elements.fromInput : elements.toInput;
+  const suggestionsContainer = type === 'from' ? elements.fromSuggestions : elements.toSuggestions;
   const inputValue = inputElement.value.toLowerCase();
+  
   suggestionsContainer.innerHTML = '';
+  suggestionsContainer.style.display = 'none';
 
-  if (!inputValue) {
-    suggestionsContainer.style.display = 'none';
-    return;
-  }
+  if (inputValue.length < 2) return;
 
-  // In a real app, you would fetch these from your backend
-  const mockLocations = [
-    { name: "University of Dar es Salaam", zone: "Zone A" },
-    { name: "Kariakoo Market", zone: "Zone B" },
-    { name: "Posta", zone: "Zone C" },
-    { name: "Mlimani City", zone: "Zone A" },
-    { name: "Ubungo Terminal", zone: "Zone D" }
-  ];
-
-  const filtered = mockLocations.filter(loc =>
-    loc.name.toLowerCase().includes(inputValue)
+  const filtered = state.routes.filter(route => 
+    route[type === 'from' ? 'from' : 'to'].toLowerCase().includes(inputValue)
   );
 
   if (filtered.length > 0) {
-    filtered.forEach(loc => {
+    filtered.forEach(route => {
+      const location = route[type === 'from' ? 'from' : 'to'];
       const suggestion = document.createElement('div');
       suggestion.className = 'suggestion-item';
-      suggestion.textContent = loc.name;
+      suggestion.textContent = location;
       suggestion.onclick = () => {
-        inputElement.value = loc.name;
-        document.getElementById(zoneElementId).value = loc.zone || '';
+        inputElement.value = location;
         suggestionsContainer.innerHTML = '';
         suggestionsContainer.style.display = 'none';
       };
       suggestionsContainer.appendChild(suggestion);
     });
     suggestionsContainer.style.display = 'block';
-  } else {
-    suggestionsContainer.style.display = 'none';
   }
 }
 
 async function findRides() {
-  const from = fromInput.value;
-  const to = toInput.value;
+  const from = elements.fromInput.value;
+  const to = elements.toInput.value;
 
   if (!from || !to) {
     showNotification('Please enter both pickup and destination locations', 'error');
@@ -197,14 +198,21 @@ async function findRides() {
   }
 
   try {
-    showLoader(findRideBtn, 'Finding rides...');
+    showLoader(elements.findRideBtn, 'Finding rides...');
 
-    // In a real app, you would fetch this from your backend
-    const mockRides = [
+    // Find matching route
+    const route = state.routes.find(r => r.from === from && r.to === to);
+    if (!route) {
+      showNotification('No rides available for this route', 'info');
+      return;
+    }
+
+    // Generate vehicle options based on route
+    const vehicleOptions = [
       {
         id: 1,
         vehicleType: "Motorcycle",
-        price: "3,000",
+        price: route.prices.Motorcycle,
         time: "10 min",
         image: "assets/motorbike.png",
         description: "Fast and affordable"
@@ -212,7 +220,7 @@ async function findRides() {
       {
         id: 2,
         vehicleType: "Bajaji",
-        price: "5,000",
+        price: route.prices.Bajaji,
         time: "15 min",
         image: "assets/tuktuk.png",
         description: "Covered and comfortable"
@@ -220,24 +228,24 @@ async function findRides() {
       {
         id: 3,
         vehicleType: "Car",
-        price: "8,000",
+        price: route.prices.Car,
         time: "12 min",
         image: "assets/taxi.png",
         description: "Private and comfortable"
       }
     ];
 
-    displayRideOptions(mockRides);
+    displayRideOptions(vehicleOptions);
   } catch (error) {
     console.error('Error finding rides:', error);
     showNotification('Failed to find rides. Please try again.', 'error');
   } finally {
-    hideLoader(findRideBtn, 'Find Rides');
+    hideLoader(elements.findRideBtn, 'Find Rides');
   }
 }
 
 function displayRideOptions(rides) {
-  vehicleOptions.innerHTML = '';
+  elements.vehicleOptions.innerHTML = '';
   
   rides.forEach(ride => {
     const card = document.createElement('div');
@@ -254,15 +262,15 @@ function displayRideOptions(rides) {
     `;
     
     card.addEventListener('click', () => selectRideOption(ride));
-    vehicleOptions.appendChild(card);
+    elements.vehicleOptions.appendChild(card);
   });
   
-  rideResults.classList.remove('hidden');
-  rideResults.scrollIntoView({ behavior: 'smooth' });
+  elements.rideResults.classList.remove('hidden');
+  elements.rideResults.scrollIntoView({ behavior: 'smooth' });
 }
 
 function selectRideOption(ride) {
-  selectedVehicle = ride;
+  state.selectedVehicle = ride;
   
   // Remove selected class from all cards
   document.querySelectorAll('.vehicle-card').forEach(card => {
@@ -272,7 +280,7 @@ function selectRideOption(ride) {
   // Add selected class to clicked card
   event.currentTarget.classList.add('selected');
   
-  // In a real app, you would fetch rider details from your backend
+  // Mock rider details (in a real app, this would come from your backend)
   const mockRider = {
     id: 101,
     name: "John Doe",
@@ -280,8 +288,8 @@ function selectRideOption(ride) {
     rating: "4.9",
     rides: "120",
     vehicle: ride.vehicleType,
-    from: fromInput.value,
-    to: toInput.value,
+    from: elements.fromInput.value,
+    to: elements.toInput.value,
     price: ride.price,
     time: ride.time,
     vehicleImage: ride.image
@@ -291,57 +299,68 @@ function selectRideOption(ride) {
 }
 
 function displayRiderDetails(rider) {
-  selectedRider = rider;
+  state.selectedRider = rider;
   
   // Set rider details
-  riderName.textContent = rider.name;
-  riderPhone.textContent = rider.phone;
-  rideVehicle.textContent = rider.vehicle;
-  rideFrom.textContent = rider.from;
-  rideTo.textContent = rider.to;
-  rideTime.textContent = rider.time;
-  ridePrice.textContent = `${rider.price} TZS`;
+  elements.riderName.textContent = rider.name;
+  elements.riderPhone.textContent = rider.phone;
+  elements.rideVehicle.textContent = rider.vehicle;
+  elements.rideFrom.textContent = rider.from;
+  elements.rideTo.textContent = rider.to;
+  elements.rideTime.textContent = rider.time;
+  elements.ridePrice.textContent = `${rider.price} TZS`;
   
   // Set rider avatar
   const initials = rider.name.split(' ').map(n => n.charAt(0)).join('');
-  riderAvatar.textContent = initials;
-  setRandomAvatarBg(riderAvatar);
+  elements.riderAvatar.textContent = initials;
+  setRandomAvatarBg(elements.riderAvatar);
   
-  riderDetails.classList.remove('hidden');
-  riderDetails.scrollIntoView({ behavior: 'smooth' });
+  elements.riderDetails.classList.remove('hidden');
+  elements.riderDetails.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function confirmRide() {
-  if (!selectedRider || !currentUser) {
+  if (!state.selectedRider || !state.currentUser) {
     showNotification('Please select a ride option first', 'error');
     return;
   }
 
   try {
-    showLoader(confirmRideBtn, 'Confirming...');
+    showLoader(elements.confirmRideBtn, 'Confirming...');
 
-    // In a real app, you would send this to your backend
     const rideData = {
       rideId: Math.floor(Math.random() * 10000),
-      passengerId: currentUser.id,
-      passengerName: `${currentUser.firstName} ${currentUser.lastName}`,
-      passengerPhone: currentUser.mobileContact,
-      riderId: selectedRider.id,
-      riderName: selectedRider.name,
-      riderPhone: selectedRider.phone,
-      vehicleType: selectedRider.vehicle,
-      from: selectedRider.from,
-      to: selectedRider.to,
-      price: selectedRider.price,
-      time: selectedRider.time,
+      passengerId: state.currentUser.id,
+      passengerName: `${state.currentUser.firstName} ${state.currentUser.lastName}`,
+      passengerPhone: state.currentUser.mobileContact,
+      passengerFirstName: state.currentUser.firstName,
+      passengerLastName: state.currentUser.lastName,
+      riderId: state.selectedRider.id,
+      riderName: state.selectedRider.name,
+      riderPhone: state.selectedRider.phone,
+      vehicleType: state.selectedRider.vehicle,
+      from: state.selectedRider.from,
+      to: state.selectedRider.to,
+      price: state.selectedRider.price,
+      time: state.selectedRider.time,
       status: 'confirmed',
       timestamp: new Date().toISOString()
     };
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    currentRide = rideData;
+    // Send confirmation to backend
+    const response = await fetch(`${config.backendUrl}/api/confirm-ride`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(rideData)
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to confirm ride');
+    }
+
+    state.currentRide = rideData;
     showRideConfirmation(rideData);
     
     // Save ride to local storage
@@ -354,15 +373,15 @@ async function confirmRide() {
     console.error('Error confirming ride:', error);
     showNotification('Failed to confirm ride. Please try again.', 'error');
   } finally {
-    hideLoader(confirmRideBtn, 'Confirm Ride');
+    hideLoader(elements.confirmRideBtn, 'Confirm Ride');
   }
 }
 
 function showRideConfirmation(ride) {
-  riderDetails.classList.add('hidden');
-  rideConfirmation.classList.remove('hidden');
+  elements.riderDetails.classList.add('hidden');
+  elements.rideConfirmation.classList.remove('hidden');
   
-  confirmationDetails.innerHTML = `
+  elements.confirmationDetails.innerHTML = `
     <div class="ride-summary">
       <div class="ride-summary-item">
         <span class="label">Rider:</span>
@@ -387,27 +406,32 @@ function showRideConfirmation(ride) {
     </div>
   `;
   
-  rideConfirmation.scrollIntoView({ behavior: 'smooth' });
+  elements.rideConfirmation.scrollIntoView({ behavior: 'smooth' });
 }
 
 function startRideTracking() {
-  rideConfirmation.classList.add('hidden');
-  trackingSection.classList.remove('hidden');
+  elements.rideConfirmation.classList.add('hidden');
+  elements.trackingSection.classList.remove('hidden');
   
   // Simulate ride tracking
   let eta = 5; // minutes
   updateTrackingDisplay(eta);
   
-  trackingInterval = setInterval(() => {
+  // Clear any existing interval
+  if (state.trackingInterval) {
+    clearInterval(state.trackingInterval);
+  }
+  
+  state.trackingInterval = setInterval(() => {
     eta -= 1;
     if (eta <= 0) {
-      clearInterval(trackingInterval);
+      clearInterval(state.trackingInterval);
       showNotification('Your rider has arrived!', 'success');
       updateTrackingDisplay(0);
-      trackRideBtn.textContent = 'Ride Completed';
-      trackRideBtn.classList.add('btn-success');
-      trackRideBtn.removeEventListener('click', startRideTracking);
-      trackRideBtn.addEventListener('click', () => {
+      elements.trackRideBtn.textContent = 'Ride Completed';
+      elements.trackRideBtn.classList.add('btn-success');
+      elements.trackRideBtn.removeEventListener('click', startRideTracking);
+      elements.trackRideBtn.addEventListener('click', () => {
         showNotification('Thank you for using Kichuo Chuo!', 'info');
       });
       return;
@@ -417,8 +441,8 @@ function startRideTracking() {
 }
 
 function updateTrackingDisplay(eta) {
-  document.getElementById('tracking-eta').textContent = eta > 0 ? `${eta} min` : 'Arrived';
-  document.getElementById('tracking-distance').textContent = eta > 0 ? `${eta * 0.8} km` : '0 km';
+  elements.trackingEta.textContent = eta > 0 ? `${eta} min` : 'Arrived';
+  elements.trackingDistance.textContent = eta > 0 ? `${eta * 0.8} km` : '0 km';
 }
 
 // Utility functions
