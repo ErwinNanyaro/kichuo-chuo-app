@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kichuo Chuo - Ride Hailing</title>
+  <title>Kichuo Chuo - Campus Ride Hailing</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- Firebase SDK -->
@@ -49,14 +49,32 @@
       background: linear-gradient(135deg, var(--primary), var(--secondary));
     }
 
-    .auth-card {
+    .auth-container {
+      display: flex;
+      width: 900px;
       background: white;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .auth-illustration {
+      flex: 1;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 40px;
-      width: 100%;
-      max-width: 450px;
-      text-align: center;
+    }
+
+    .auth-illustration img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .auth-card {
+      flex: 1;
+      padding: 40px;
     }
 
     .auth-card h2 {
@@ -331,13 +349,78 @@
       text-align: right;
     }
 
+    /* Auth Tabs */
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .auth-tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--gray);
+      border-bottom: 2px solid transparent;
+    }
+
+    .auth-tab.active {
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+    }
+
+    /* Signup Form */
+    #signup-form {
+      display: none;
+    }
+
+    .name-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .user-type-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .user-type-option {
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .user-type-option.selected {
+      border-color: var(--primary);
+      background: rgba(58, 134, 255, 0.05);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
-      .auth-card {
-        padding: 30px 20px;
+      .auth-container {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .auth-illustration {
+        display: none;
       }
       
       .vehicle-options {
+        grid-template-columns: 1fr;
+      }
+      
+      .name-fields {
+        grid-template-columns: 1fr;
+      }
+      
+      .user-type-options {
         grid-template-columns: 1fr;
       }
     }
@@ -366,22 +449,83 @@
 <body>
   <!-- Authentication Section -->
   <div id="auth-section">
-    <div class="auth-card">
-      <div class="logo">
-        <i class="fas fa-motorcycle"></i>
-        <span>Kichuo Chuo</span>
+    <div class="auth-container">
+      <div class="auth-illustration">
+        <img src="{{ url_for('static', filename='images/ride-illustration.svg') }}" alt="Ride Illustration">
       </div>
-      <h2>Welcome Back</h2>
-      <form id="login-form">
-        <div class="form-group">
-          <label for="login-phone">Phone Number</label>
-          <input type="tel" id="login-phone" class="form-control" placeholder="Enter your phone number">
+      <div class="auth-card">
+        <div class="logo">
+          <i class="fas fa-motorcycle"></i>
+          <span>Kichuo Chuo</span>
         </div>
-        <button type="submit" class="btn">Continue</button>
-        <div class="mt-2 text-center">
-          <p>Don't have an account? <a href="#" id="register-link">Sign up</a></p>
+        
+        <div class="auth-tabs">
+          <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+          <div class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</div>
         </div>
-      </form>
+        
+        <!-- Login Form -->
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" class="form-control" placeholder="Enter your email">
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="Enter your password">
+          </div>
+          <button type="submit" class="btn">Continue</button>
+        </form>
+        
+        <!-- Signup Form -->
+        <form id="signup-form">
+          <div class="name-fields">
+            <div class="form-group">
+              <label for="signup-firstname">First Name</label>
+              <input type="text" id="signup-firstname" class="form-control" placeholder="First name" required>
+            </div>
+            <div class="form-group">
+              <label for="signup-lastname">Last Name</label>
+              <input type="text" id="signup-lastname" class="form-control" placeholder="Last name" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="signup-email">Email Address</label>
+            <input type="email" id="signup-email" class="form-control" placeholder="Enter your email" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="signup-phone">Phone Number</label>
+            <input type="tel" id="signup-phone" class="form-control" placeholder="Enter your phone number" required>
+          </div>
+          
+          <div class="form-group">
+            <label>User Type</label>
+            <div class="user-type-options">
+              <div class="user-type-option" data-type="Student" onclick="selectUserType(this)">Student</div>
+              <div class="user-type-option" data-type="Staff" onclick="selectUserType(this)">Staff</div>
+              <div class="user-type-option" data-type="Resident" onclick="selectUserType(this)">Resident</div>
+            </div>
+            <input type="hidden" id="user-type" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" class="form-control" placeholder="Create password" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="signup-confirm-password">Confirm Password</label>
+            <input type="password" id="signup-confirm-password" class="form-control" placeholder="Confirm password" required>
+          </div>
+          
+          <button type="submit" class="btn">Create Account</button>
+          <div class="mt-2 text-center">
+            <p>Already have an account? <a href="#" onclick="switchAuthTab('login')">Sign in</a></p>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -465,6 +609,6 @@
   </div>
 
   <!-- External JavaScript file with Flask static reference -->
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
