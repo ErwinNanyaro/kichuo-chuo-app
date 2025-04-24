@@ -1,391 +1,470 @@
-// Firebase configuration (replace with your actual config)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Configuration
-const config = {
-  backendUrl: 'http://localhost:5000',
-  defaultAvatarBgColors: ['#3a86ff', '#8338ec', '#06d6a0', '#ef476f', '#ffd166']
-};
-
-// DOM Elements
-const authSection = document.getElementById('auth-section');
-const appContainer = document.getElementById('app-container');
-const loginForm = document.getElementById('login-form');
-const loginPhoneInput = document.getElementById('login-phone');
-const userAvatar = document.getElementById('user-avatar');
-const userName = document.getElementById('user-name');
-const fromInput = document.getElementById('from');
-const toInput = document.getElementById('to');
-const fromSuggestions = document.getElementById('from-suggestions');
-const toSuggestions = document.getElementById('to-suggestions');
-const findRideBtn = document.getElementById('find-ride-btn');
-const rideResults = document.getElementById('ride-results');
-const vehicleOptions = document.getElementById('vehicle-options');
-const riderDetails = document.getElementById('rider-details');
-const riderAvatar = document.getElementById('rider-avatar');
-const riderName = document.getElementById('rider-name');
-const riderPhone = document.getElementById('rider-phone');
-const rideVehicle = document.getElementById('ride-vehicle');
-const rideFrom = document.getElementById('ride-from');
-const rideTo = document.getElementById('ride-to');
-const rideTime = document.getElementById('ride-time');
-const ridePrice = document.getElementById('ride-price');
-const confirmRideBtn = document.getElementById('confirm-ride-btn');
-const rideConfirmation = document.getElementById('ride-confirmation');
-const confirmationDetails = document.getElementById('confirmation-details');
-const trackRideBtn = document.getElementById('track-ride-btn');
-
-// State
-let currentUser = null;
-let selectedVehicle = null;
-let selectedRider = null;
-let currentRide = null;
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  checkAuthState();
-  setupEventListeners();
-});
-
-function checkAuthState() {
-  const userData = localStorage.getItem('user');
-  if (userData) {
-    currentUser = JSON.parse(userData);
-    showApp();
-  }
-}
-
-function showApp() {
-  authSection.classList.add('hidden');
-  appContainer.classList.remove('hidden');
-  
-  // Set user info
-  if (currentUser) {
-    const initials = currentUser.firstName.charAt(0) + currentUser.lastName.charAt(0);
-    userAvatar.textContent = initials;
-    userName.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-    setRandomAvatarBg(userAvatar);
-  }
-}
-
-function setupEventListeners() {
-  // Login form
-  if (loginForm) {
-    loginForm.addEventListener('submit', handleLogin);
-  }
-
-  // Location inputs
-  fromInput.addEventListener('input', () => handleLocationInput(fromInput, fromSuggestions, 'from-zone'));
-  toInput.addEventListener('input', () => handleLocationInput(toInput, toSuggestions, 'to-zone'));
-
-  // Find ride button
-  findRideBtn.addEventListener('click', findRides);
-
-  // Confirm ride button
-  confirmRideBtn.addEventListener('click', confirmRide);
-
-  // Track ride button
-  trackRideBtn.addEventListener('click', trackRide);
-}
-
-async function handleLogin(e) {
-  e.preventDefault();
-  const phone = loginPhoneInput.value.trim();
-
-  if (!phone) {
-    showAlert('Please enter your phone number', 'error');
-    return;
-  }
-
-  try {
-    const response = await fetch(`${config.backendUrl}/api/login-passenger`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ mobileContact: phone }),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      currentUser = data.user;
-      localStorage.setItem('user', JSON.stringify(data.user));
-      showApp();
-      showAlert(`Welcome back, ${data.user.firstName}!`, 'success');
-    } else {
-      showAlert(data.message || 'Login failed. Please try again.', 'error');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kichuo Chuo - Ride Hailing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <style>
+    :root {
+      --primary: #3a86ff;
+      --secondary: #8338ec;
+      --success: #06d6a0;
+      --danger: #ef476f;
+      --warning: #ffd166;
+      --dark: #1a1a2e;
+      --light: #f8f9fa;
+      --gray: #6c757d;
     }
-  } catch (error) {
-    console.error('Login error:', error);
-    showAlert('An error occurred during login. Please try again.', 'error');
-  }
-}
 
-function handleLocationInput(inputElement, suggestionsContainer, zoneElementId) {
-  const inputValue = inputElement.value.toLowerCase();
-  suggestionsContainer.innerHTML = '';
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  if (!inputValue) {
-    suggestionsContainer.style.display = 'none';
-    return;
-  }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f5f5;
+      color: var(--dark);
+      line-height: 1.6;
+    }
 
-  // In a real app, you would fetch these from your backend
-  const mockLocations = [
-    { name: "Mzumbe University", zone: "Zone A" },
-    { name: "Uswazi Chini", zone: "Zone B" },
-    { name: "Campus", zone: "Zone C" },
-    { name: "Mzumbe University", zone: "Zone A" },
-    { name: "Vikenge", zone: "Zone D" }
-  ];
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
 
-  const filtered = mockLocations.filter(loc =>
-    loc.name.toLowerCase().includes(inputValue)
-  );
+    /* Auth Section */
+    #auth-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+    }
 
-  if (filtered.length > 0) {
-    filtered.forEach(loc => {
-      const suggestion = document.createElement('div');
-      suggestion.className = 'suggestion-item';
-      suggestion.textContent = loc.name;
-      suggestion.onclick = () => {
-        inputElement.value = loc.name;
-        document.getElementById(zoneElementId).value = loc.zone || '';
-        suggestionsContainer.innerHTML = '';
-        suggestionsContainer.style.display = 'none';
-      };
-      suggestionsContainer.appendChild(suggestion);
-    });
-    suggestionsContainer.style.display = 'block';
-  } else {
-    suggestionsContainer.style.display = 'none';
-  }
-}
+    .auth-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+    }
 
-async function findRides() {
-  const from = fromInput.value;
-  const to = toInput.value;
+    .auth-card h2 {
+      margin-bottom: 30px;
+      color: var(--dark);
+      font-size: 28px;
+    }
 
-  if (!from || !to) {
-    showAlert('Please enter both pickup and destination locations', 'error');
-    return;
-  }
+    .logo {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-  try {
-    showLoader(findRideBtn, 'Finding rides...');
+    .logo i {
+      margin-right: 10px;
+    }
 
-    // In a real app, you would fetch this from your backend
-    const mockRides = [
-      {
-        vehicleType: "Motorcycle",
-        price: "3,000",
-        time: "10 min",
-        image: "motorbike.png"
-      },
-      {
-        vehicleType: "Bajaji",
-        price: "5,000",
-        time: "15 min",
-        image: "tuktuk.png"
-      },
-      {
-        vehicleType: "Car",
-        price: "8,000",
-        time: "12 min",
-        image: "taxi.png"
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--gray);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background: #2a75e6;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: var(--gray);
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    /* Main App */
+    #app-container {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .app-header {
+      background: white;
+      padding: 15px 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      font-weight: 600;
+    }
+
+    .ride-container {
+      padding: 20px;
+    }
+
+    .location-inputs {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .location-input {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .location-input i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+
+    .location-input input {
+      padding-left: 40px;
+    }
+
+    .suggestions {
+      position: absolute;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      display: none;
+    }
+
+    .suggestion-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .suggestion-item:hover {
+      background: #f5f5f5;
+    }
+
+    .vehicle-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .vehicle-card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+
+    .vehicle-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .vehicle-card.selected {
+      border-color: var(--primary);
+      background: rgba(58, 134, 255, 0.05);
+    }
+
+    .vehicle-card img {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+
+    .vehicle-card p {
+      font-weight: 500;
+      margin: 5px 0;
+    }
+
+    .vehicle-card .price {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .rider-details {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .rider-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .rider-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--secondary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      margin-right: 15px;
+    }
+
+    .rider-meta p {
+      margin: 5px 0;
+    }
+
+    .rider-meta .name {
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .rider-meta .rating {
+      color: var(--warning);
+    }
+
+    .ride-summary {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .ride-summary-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .ride-summary-item .label {
+      color: var(--gray);
+    }
+
+    .ride-summary-item .value {
+      font-weight: 600;
+    }
+
+    .total-price {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 15px;
+      text-align: right;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .auth-card {
+        padding: 30px 20px;
       }
-    ];
+      
+      .vehicle-options {
+        grid-template-columns: 1fr;
+      }
+    }
 
-    displayRideOptions(mockRides);
-  } catch (error) {
-    console.error('Error finding rides:', error);
-    showAlert('Failed to find rides. Please try again.', 'error');
-  } finally {
-    hideLoader(findRideBtn, 'Find Rides');
-  }
-}
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-function displayRideOptions(rides) {
-  vehicleOptions.innerHTML = '';
-  
-  rides.forEach(ride => {
-    const card = document.createElement('div');
-    card.className = 'vehicle-card';
-    card.dataset.vehicle = ride.vehicleType;
-    
-    card.innerHTML = `
-      <img src="${ride.image}" alt="${ride.vehicleType}">
-      <p>${ride.vehicleType}</p>
-      <p class="price">${ride.price} TZS</p>
-      <small>${ride.time} away</small>
-    `;
-    
-    card.addEventListener('click', () => selectRideOption(ride));
-    vehicleOptions.appendChild(card);
-  });
-  
-  rideResults.classList.remove('hidden');
-}
+    .fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
 
-function selectRideOption(ride) {
-  selectedVehicle = ride.vehicleType;
-  
-  // Remove selected class from all cards
-  document.querySelectorAll('.vehicle-card').forEach(card => {
-    card.classList.remove('selected');
-  });
-  
-  // Add selected class to clicked card
-  event.currentTarget.classList.add('selected');
-  
-  // In a real app, you would fetch rider details from your backend
-  const mockRider = {
-    name: "John Doe",
-    phone: "0712345678",
-    rating: "4.9",
-    rides: "120",
-    vehicle: ride.vehicleType,
-    from: fromInput.value,
-    to: toInput.value,
-    price: ride.price,
-    time: ride.time
-  };
-  
-  displayRiderDetails(mockRider);
-}
-
-function displayRiderDetails(rider) {
-  selectedRider = rider;
-  
-  // Set rider details
-  riderName.textContent = rider.name;
-  riderPhone.textContent = rider.phone;
-  rideVehicle.textContent = rider.vehicle;
-  rideFrom.textContent = rider.from;
-  rideTo.textContent = rider.to;
-  rideTime.textContent = rider.time;
-  ridePrice.textContent = `${rider.price} TZS`;
-  
-  // Set rider avatar
-  const initials = rider.name.split(' ').map(n => n.charAt(0)).join('');
-  riderAvatar.textContent = initials;
-  setRandomAvatarBg(riderAvatar);
-  
-  riderDetails.classList.remove('hidden');
-  riderDetails.scrollIntoView({ behavior: 'smooth' });
-}
-
-async function confirmRide() {
-  if (!selectedRider || !currentUser) {
-    showAlert('Please select a ride option first', 'error');
-    return;
-  }
-
-  try {
-    showLoader(confirmRideBtn, 'Confirming...');
-
-    // In a real app, you would send this to your backend
-    const rideData = {
-      passengerId: currentUser.id,
-      passengerName: `${currentUser.firstName} ${currentUser.lastName}`,
-      passengerPhone: currentUser.phone,
-      riderName: selectedRider.name,
-      riderPhone: selectedRider.phone,
-      vehicleType: selectedRider.vehicle,
-      from: selectedRider.from,
-      to: selectedRider.to,
-      price: selectedRider.price,
-      time: selectedRider.time
-    };
-
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    currentRide = rideData;
-    showRideConfirmation(rideData);
-  } catch (error) {
-    console.error('Error confirming ride:', error);
-    showAlert('Failed to confirm ride. Please try again.', 'error');
-  } finally {
-    hideLoader(confirmRideBtn, 'Confirm Ride');
-  }
-}
-
-function showRideConfirmation(ride) {
-  riderDetails.classList.add('hidden');
-  rideConfirmation.classList.remove('hidden');
-  
-  confirmationDetails.innerHTML = `
-    <div class="ride-summary">
-      <div class="ride-summary-item">
-        <span class="label">Rider:</span>
-        <span class="value">${ride.riderName}</span>
+    /* Utility Classes */
+    .text-center { text-align: center; }
+    .mt-1 { margin-top: 10px; }
+    .mt-2 { margin-top: 20px; }
+    .mt-3 { margin-top: 30px; }
+    .mb-1 { margin-bottom: 10px; }
+    .mb-2 { margin-bottom: 20px; }
+    .mb-3 { margin-bottom: 30px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <!-- Authentication Section -->
+  <div id="auth-section">
+    <div class="auth-card">
+      <div class="logo">
+        <i class="fas fa-motorcycle"></i>
+        <span>Kichuo Chuo</span>
       </div>
-      <div class="ride-summary-item">
-        <span class="label">Vehicle:</span>
-        <span class="value">${ride.vehicleType}</span>
+      <h2>Welcome Back</h2>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-phone">Phone Number</label>
+          <input type="tel" id="login-phone" class="form-control" placeholder="Enter your phone number">
+        </div>
+        <button type="submit" class="btn">Continue</button>
+        <div class="mt-2 text-center">
+          <p>Don't have an account? <a href="#" id="register-link">Sign up</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Container -->
+  <div id="app-container">
+    <header class="app-header">
+      <div class="logo">
+        <i class="fas fa-motorcycle"></i>
+        <span>Kichuo Chuo</span>
       </div>
-      <div class="ride-summary-item">
-        <span class="label">From:</span>
-        <span class="value">${ride.from}</span>
+      <div class="user-profile">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span id="user-name">User</span>
       </div>
-      <div class="ride-summary-item">
-        <span class="label">To:</span>
-        <span class="value">${ride.to}</span>
+    </header>
+
+    <div class="ride-container">
+      <div class="location-inputs">
+        <div class="location-input">
+          <i class="fas fa-map-marker-alt"></i>
+          <input type="text" id="from" class="form-control" placeholder="Current location">
+          <div id="from-suggestions" class="suggestions"></div>
+          <input type="hidden" id="from-zone">
+        </div>
+        <div class="location-input">
+          <i class="fas fa-flag"></i>
+          <input type="text" id="to" class="form-control" placeholder="Where to?">
+          <div id="to-suggestions" class="suggestions"></div>
+        </div>
+        <button id="find-ride-btn" class="btn mt-2">Find Rides</button>
       </div>
-      <div class="ride-summary-item">
-        <span class="label">Price:</span>
-        <span class="value">${ride.price} TZS</span>
+
+      <div id="ride-results" class="hidden">
+        <h3>Available Rides</h3>
+        <div class="vehicle-options" id="vehicle-options">
+          <!-- Vehicle cards will be populated here -->
+        </div>
+      </div>
+
+      <div id="rider-details" class="rider-details hidden">
+        <div class="rider-info">
+          <div class="rider-avatar" id="rider-avatar">J</div>
+          <div class="rider-meta">
+            <p class="name" id="rider-name">John Doe</p>
+            <p><i class="fas fa-star"></i> <span class="rating">4.9</span> (120 rides)</p>
+            <p><i class="fas fa-phone"></i> <span id="rider-phone">0712345678</span></p>
+          </div>
+        </div>
+        <div class="ride-summary">
+          <div class="ride-summary-item">
+            <span class="label">Vehicle:</span>
+            <span class="value" id="ride-vehicle">Bajaji</span>
+          </div>
+          <div class="ride-summary-item">
+            <span class="label">From:</span>
+            <span class="value" id="ride-from">Current Location</span>
+          </div>
+          <div class="ride-summary-item">
+            <span class="label">To:</span>
+            <span class="value" id="ride-to">Destination</span>
+          </div>
+          <div class="ride-summary-item">
+            <span class="label">Estimated Time:</span>
+            <span class="value" id="ride-time">15 min</span>
+          </div>
+          <div class="total-price" id="ride-price">5,000 TZS</div>
+        </div>
+        <button id="confirm-ride-btn" class="btn mt-2">Confirm Ride</button>
+      </div>
+
+      <div id="ride-confirmation" class="hidden">
+        <div class="text-center">
+          <i class="fas fa-check-circle" style="font-size: 60px; color: var(--success);"></i>
+          <h3 class="mt-2">Ride Confirmed!</h3>
+          <p>Your rider is on the way</p>
+          <div id="confirmation-details" class="mt-2"></div>
+          <button id="track-ride-btn" class="btn mt-2">Track Ride</button>
+        </div>
       </div>
     </div>
-  `;
-  
-  showAlert('Your ride has been confirmed!', 'success');
-}
+  </div>
 
-function trackRide() {
-  showAlert('Ride tracking will be implemented soon!', 'info');
-  // In a real app, you would implement ride tracking here
-}
-
-// Utility functions
-function showAlert(message, type) {
-  // In a real app, you would use a proper notification system
-  alert(`${type.toUpperCase()}: ${message}`);
-}
-
-function showLoader(button, text) {
-  button.disabled = true;
-  button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
-}
-
-function hideLoader(button, text) {
-  button.disabled = false;
-  button.textContent = text;
-}
-
-function setRandomAvatarBg(element) {
-  const randomColor = config.defaultAvatarBgColors[
-    Math.floor(Math.random() * config.defaultAvatarBgColors.length)
-  ];
-  element.style.backgroundColor = randomColor;
-}
-
-// Close suggestions when clicking outside
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.location-input')) {
-    fromSuggestions.style.display = 'none';
-    toSuggestions.style.display = 'none';
-  }
-});
+  <!-- External JavaScript file -->
+  <script src="app.js"></script>
+</body>
+</html>
