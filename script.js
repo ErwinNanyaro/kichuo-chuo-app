@@ -1,6 +1,6 @@
 // Configuration
 const config = {
-  backendUrl: window.location.origin,
+  backendUrl: window.location.origin, // Automatically matches current host
   defaultAvatarBgColors: ['#3a86ff', '#8338ec', '#06d6a0', '#ef476f', '#ffd166'],
   firebaseConfig: {
     apiKey: "AIzaSyBmv0G4dYFKkq10DA5PJvooFTNSJMnQ59g",
@@ -19,33 +19,29 @@ if (!firebase.apps.length) {
 
 // DOM Elements
 const elements = {
-  // Auth elements
+  // Auth Section
   authSection: document.getElementById('auth-section'),
-  authTabs: document.querySelectorAll('.auth-tab'),
   loginForm: document.getElementById('login-form'),
-  loginEmail: document.getElementById('login-email'),
-  loginPassword: document.getElementById('login-password'),
-  signupForm: document.getElementById('signup-form'),
-  signupFirstName: document.getElementById('signup-firstname'),
-  signupLastName: document.getElementById('signup-lastname'),
-  signupEmail: document.getElementById('signup-email'),
-  signupPhone: document.getElementById('signup-phone'),
-  signupPassword: document.getElementById('signup-password'),
-  signupConfirmPassword: document.getElementById('signup-confirm-password'),
-  userTypeOptions: document.querySelectorAll('.user-type-option'),
-  userTypeInput: document.getElementById('user-type'),
+  loginPhoneInput: document.getElementById('login-phone'),
+  registerLink: document.getElementById('register-link'),
   
-  // App elements
+  // Main App
   appContainer: document.getElementById('app-container'),
   userAvatar: document.getElementById('user-avatar'),
   userName: document.getElementById('user-name'),
+  
+  // Ride Booking
   fromInput: document.getElementById('from'),
   toInput: document.getElementById('to'),
   fromSuggestions: document.getElementById('from-suggestions'),
   toSuggestions: document.getElementById('to-suggestions'),
   findRideBtn: document.getElementById('find-ride-btn'),
+  
+  // Ride Results
   rideResults: document.getElementById('ride-results'),
   vehicleOptions: document.getElementById('vehicle-options'),
+  
+  // Rider Details
   riderDetails: document.getElementById('rider-details'),
   riderAvatar: document.getElementById('rider-avatar'),
   riderName: document.getElementById('rider-name'),
@@ -56,16 +52,22 @@ const elements = {
   rideTime: document.getElementById('ride-time'),
   ridePrice: document.getElementById('ride-price'),
   confirmRideBtn: document.getElementById('confirm-ride-btn'),
+  
+  // Ride Confirmation
   rideConfirmation: document.getElementById('ride-confirmation'),
   confirmationDetails: document.getElementById('confirmation-details'),
-  trackRideBtn: document.getElementById('track-ride-btn')
+  trackRideBtn: document.getElementById('track-ride-btn'),
+  
+  // Ride Tracking
+  trackingSection: document.getElementById('tracking-section'),
+  trackingEta: document.getElementById('tracking-eta'),
+  trackingDistance: document.getElementById('tracking-distance')
 };
 
 // Application State
 let state = {
   currentUser: null,
   routes: [],
-  riders: [],
   selectedVehicle: null,
   selectedRider: null,
   currentRide: null,
@@ -90,30 +92,15 @@ function checkAuthState() {
 
 // Set up all event listeners
 function setupEventListeners() {
-  // Auth tab switching
-  elements.authTabs.forEach(tab => {
-    tab.addEventListener('click', (e) => {
-      const tabType = e.target.getAttribute('onclick').match(/'(\w+)'/)[1];
-      switchAuthTab(tabType);
-    });
-  });
-
   // Login form
   if (elements.loginForm) {
     elements.loginForm.addEventListener('submit', handleLogin);
   }
 
-  // Signup form
-  if (elements.signupForm) {
-    elements.signupForm.addEventListener('submit', handleSignup);
+  // Register link
+  if (elements.registerLink) {
+    elements.registerLink.addEventListener('click', showRegisterForm);
   }
-
-  // User type selection
-  elements.userTypeOptions.forEach(option => {
-    option.addEventListener('click', function() {
-      selectUserType(this);
-    });
-  });
 
   // Location inputs
   elements.fromInput.addEventListener('input', () => handleLocationInput('from'));
@@ -133,52 +120,32 @@ function setupEventListeners() {
   });
 }
 
-// Switch between login and signup tabs
-function switchAuthTab(tabType) {
-  elements.authTabs.forEach(tab => {
-    if (tab.getAttribute('onclick').includes(tabType)) {
-      tab.classList.add('active');
-    } else {
-      tab.classList.remove('active');
-    }
-  });
-
-  if (tabType === 'login') {
-    elements.loginForm.style.display = 'block';
-    elements.signupForm.style.display = 'none';
-  } else {
-    elements.loginForm.style.display = 'none';
-    elements.signupForm.style.display = 'block';
-  }
-}
-
-// Select user type in signup form
-function selectUserType(element) {
-  elements.userTypeOptions.forEach(opt => opt.classList.remove('selected'));
-  element.classList.add('selected');
-  elements.userTypeInput.value = element.dataset.type;
+// Show registration form
+function showRegisterForm(e) {
+  e.preventDefault();
+  // Implementation would go here
+  showNotification('Registration will be implemented soon!', 'info');
 }
 
 // Handle login form submission
 async function handleLogin(e) {
   e.preventDefault();
-  const email = elements.loginEmail.value.trim();
-  const password = elements.loginPassword.value.trim();
+  const phone = elements.loginPhoneInput.value.trim();
 
-  if (!email || !password) {
-    showNotification('Please enter both email and password', 'error');
+  if (!phone) {
+    showNotification('Please enter your phone number', 'error');
     return;
   }
 
   try {
-    showLoader(elements.loginForm.querySelector('button'), 'Logging in...');
+    showLoader(elements.loginForm.querySelector('button'), 'Continuing...');
 
-    const response = await fetch(`${config.backendUrl}/api/login`, {
+    const response = await fetch(`${config.backendUrl}/api/login-passenger`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ mobileContact: phone }),
     });
 
     const data = await response.json();
@@ -196,69 +163,6 @@ async function handleLogin(e) {
     showNotification('An error occurred during login. Please try again.', 'error');
   } finally {
     hideLoader(elements.loginForm.querySelector('button'), 'Continue');
-  }
-}
-
-// Handle signup form submission
-async function handleSignup(e) {
-  e.preventDefault();
-  const firstName = elements.signupFirstName.value.trim();
-  const lastName = elements.signupLastName.value.trim();
-  const email = elements.signupEmail.value.trim();
-  const phone = elements.signupPhone.value.trim();
-  const password = elements.signupPassword.value.trim();
-  const confirmPassword = elements.signupConfirmPassword.value.trim();
-  const userType = elements.userTypeInput.value;
-
-  // Validation
-  if (!firstName || !lastName || !email || !phone || !password || !confirmPassword || !userType) {
-    showNotification('Please fill all fields', 'error');
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    showNotification('Passwords do not match', 'error');
-    return;
-  }
-
-  if (password.length < 6) {
-    showNotification('Password must be at least 6 characters', 'error');
-    return;
-  }
-
-  try {
-    showLoader(elements.signupForm.querySelector('button'), 'Registering...');
-
-    const response = await fetch(`${config.backendUrl}/api/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        firstName,
-        lastName,
-        email,
-        phone,
-        password,
-        userType
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      state.currentUser = data.user;
-      localStorage.setItem('user', JSON.stringify(data.user));
-      showApp();
-      showNotification(`Welcome to Kichuo Chuo, ${data.user.firstName}!`, 'success');
-    } else {
-      showNotification(data.message || 'Registration failed. Please try again.', 'error');
-    }
-  } catch (error) {
-    console.error('Signup error:', error);
-    showNotification('An error occurred during registration. Please try again.', 'error');
-  } finally {
-    hideLoader(elements.signupForm.querySelector('button'), 'Create Account');
   }
 }
 
@@ -300,10 +204,9 @@ function handleLocationInput(type) {
 
   if (inputValue.length < 2) return;
 
-  const filtered = state.routes.filter(route => {
-    const location = type === 'from' ? route.FromLocationName : route.ToLocationName;
-    return location.toLowerCase().includes(inputValue);
-  });
+  const filtered = state.routes.filter(route => 
+    route[type === 'from' ? 'FromLocationName' : 'ToLocationName'].toLowerCase().includes(inputValue)
+  );
 
   if (filtered.length > 0) {
     filtered.forEach(route => {
@@ -314,8 +217,7 @@ function handleLocationInput(type) {
       suggestion.onclick = () => {
         inputElement.value = location;
         if (type === 'from') {
-          // Store zone for 'from' location
-          document.getElementById('from-zone').value = route.Zone;
+          document.getElementById('from-zone').value = route.Zone || '';
         }
         suggestionsContainer.innerHTML = '';
         suggestionsContainer.style.display = 'none';
@@ -349,14 +251,14 @@ async function findRides() {
       return;
     }
 
-    // Generate vehicle options based on route
+    // Generate vehicle options with correct image paths
     const vehicleOptions = [
       {
         id: 1,
         vehicleType: "Motorcycle",
         price: route.MotorcyclePrice,
         time: "10 min",
-        image: "{{ url_for('static', filename='images/motorbike.png') }}",
+        image: "/static/images/motorbike.png",
         description: "Fast and affordable"
       },
       {
@@ -364,7 +266,7 @@ async function findRides() {
         vehicleType: "Bajaji",
         price: route.BajajiPrice,
         time: "15 min",
-        image: "{{ url_for('static', filename='images/tuktuk.png') }}",
+        image: "/static/images/tuktuk.png",
         description: "Covered and comfortable"
       },
       {
@@ -372,7 +274,7 @@ async function findRides() {
         vehicleType: "Car",
         price: route.CarPrice,
         time: "12 min",
-        image: "{{ url_for('static', filename='images/taxi.png') }}",
+        image: "/static/images/taxi.png",
         description: "Private and comfortable"
       }
     ];
@@ -391,8 +293,6 @@ function displayRideOptions(rides) {
   elements.vehicleOptions.innerHTML = '';
   
   rides.forEach(ride => {
-    if (!ride.price || ride.price <= 0) return; // Skip unavailable options
-    
     const card = document.createElement('div');
     card.className = 'vehicle-card fade-in';
     card.dataset.vehicle = ride.vehicleType;
@@ -414,8 +314,8 @@ function displayRideOptions(rides) {
   elements.rideResults.scrollIntoView({ behavior: 'smooth' });
 }
 
-// Select a ride option and find available riders
-async function selectRideOption(ride) {
+// Select a ride option
+function selectRideOption(ride) {
   state.selectedVehicle = ride;
   
   // Update UI
@@ -424,56 +324,38 @@ async function selectRideOption(ride) {
   });
   event.currentTarget.classList.add('selected');
   
-  try {
-    showLoader(elements.findRideBtn, 'Finding riders...');
-    
-    // Get zone from 'from' location
-    const zone = document.getElementById('from-zone').value;
-    if (!zone) {
-      showNotification('Could not determine zone for pickup location', 'error');
-      return;
-    }
-    
-    // Fetch available riders
-    const response = await fetch(
-      `${config.backendUrl}/api/riders?vehicleType=${ride.vehicleType}&zone=${zone}`
-    );
-    
-    if (!response.ok) throw new Error('Failed to fetch riders');
-    
-    const riders = await response.json();
-    if (riders.length === 0) {
-      showNotification('No riders available for selected vehicle type', 'info');
-      return;
-    }
-    
-    // Select a random rider (in real app, you might have a matching algorithm)
-    const rider = riders[Math.floor(Math.random() * riders.length)];
-    displayRiderDetails(rider, ride);
-    
-  } catch (error) {
-    console.error('Error finding riders:', error);
-    showNotification('Failed to find riders. Please try again.', 'error');
-  } finally {
-    hideLoader(elements.findRideBtn, 'Find Rides');
-  }
+  // Mock rider details (in real app, this would come from backend)
+  const mockRider = {
+    id: 101,
+    name: "John Doe",
+    phone: "0712345678",
+    rating: "4.9",
+    rides: "120",
+    vehicle: ride.vehicleType,
+    from: elements.fromInput.value,
+    to: elements.toInput.value,
+    price: ride.price,
+    time: ride.time
+  };
+  
+  displayRiderDetails(mockRider);
 }
 
 // Display rider details
-function displayRiderDetails(rider, ride) {
+function displayRiderDetails(rider) {
   state.selectedRider = rider;
   
   // Set rider details
-  elements.riderName.textContent = rider.Name;
-  elements.riderPhone.textContent = rider.Phone;
-  elements.rideVehicle.textContent = ride.vehicleType;
-  elements.rideFrom.textContent = elements.fromInput.value;
-  elements.rideTo.textContent = elements.toInput.value;
-  elements.rideTime.textContent = ride.time;
-  elements.ridePrice.textContent = `${ride.price} TZS`;
+  elements.riderName.textContent = rider.name;
+  elements.riderPhone.textContent = rider.phone;
+  elements.rideVehicle.textContent = rider.vehicle;
+  elements.rideFrom.textContent = rider.from;
+  elements.rideTo.textContent = rider.to;
+  elements.rideTime.textContent = rider.time;
+  elements.ridePrice.textContent = `${rider.price} TZS`;
   
   // Set rider avatar
-  const initials = rider.Name.split(' ').map(n => n.charAt(0)).join('');
+  const initials = rider.name.split(' ').map(n => n.charAt(0)).join('');
   elements.riderAvatar.textContent = initials;
   setRandomAvatarBg(elements.riderAvatar);
   
@@ -483,7 +365,7 @@ function displayRiderDetails(rider, ride) {
 
 // Confirm ride with selected rider
 async function confirmRide() {
-  if (!state.selectedRider || !state.currentUser || !state.selectedVehicle) {
+  if (!state.selectedRider || !state.currentUser) {
     showNotification('Please select a ride option first', 'error');
     return;
   }
@@ -494,14 +376,13 @@ async function confirmRide() {
     const rideData = {
       passengerId: state.currentUser.id,
       passengerName: `${state.currentUser.firstName} ${state.currentUser.lastName}`,
-      passengerEmail: state.currentUser.email,
-      passengerPhone: state.currentUser.phone,
-      riderId: state.selectedRider.RiderID,
-      riderName: state.selectedRider.Name,
-      riderPhone: state.selectedRider.Phone,
+      passengerPhone: state.currentUser.mobileContact,
+      riderId: state.selectedRider.id,
+      riderName: state.selectedRider.name,
+      riderPhone: state.selectedRider.phone,
       vehicleType: state.selectedVehicle.vehicleType,
-      fromLocation: elements.fromInput.value,
-      toLocation: elements.toInput.value
+      from: state.selectedRider.from,
+      to: state.selectedRider.to
     };
 
     const response = await fetch(`${config.backendUrl}/api/confirm-ride`, {
@@ -523,6 +404,7 @@ async function confirmRide() {
         netAmount: data.netAmount
       };
       showRideConfirmation(state.currentRide);
+      showNotification('Your ride has been confirmed!', 'success');
     } else {
       throw new Error(data.message || 'Failed to confirm ride');
     }
@@ -551,11 +433,11 @@ function showRideConfirmation(ride) {
       </div>
       <div class="ride-summary-item">
         <span class="label">From:</span>
-        <span class="value">${ride.fromLocation}</span>
+        <span class="value">${ride.from}</span>
       </div>
       <div class="ride-summary-item">
         <span class="label">To:</span>
-        <span class="value">${ride.toLocation}</span>
+        <span class="value">${ride.to}</span>
       </div>
       <div class="ride-summary-item">
         <span class="label">Price:</span>
@@ -569,11 +451,10 @@ function showRideConfirmation(ride) {
 
 // Start ride tracking simulation
 function startRideTracking() {
-  let eta = 5; // minutes
-  
-  // Update UI
   elements.rideConfirmation.classList.add('hidden');
   elements.trackingSection.classList.remove('hidden');
+  
+  let eta = 5; // minutes
   updateTrackingDisplay(eta);
   
   // Clear any existing interval
